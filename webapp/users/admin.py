@@ -3,3 +3,4 @@ from users import models
 
 admin.site.register(models.User)
 admin.site.register(models.Vote)
+admin.site.register(models.Topic)

@@ -23,3 +23,26 @@ class Vote(models.Model):
 
     def dislike(self):
         self.is_positive_vote = False
+
+class Topic(models.Model):
+    name = models.CharField(max_length=50)
+    description = models.TextField()
+    #? Resolve cardinal relationship to Question... ManyToMany, perhaps
+
+    """ def add_question(self, a_question):
+        self.questions.append(a_question) """
+
+    def get_description(self):
+        return self.description
+
+    def set_description(self, description):
+        self.description = description
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    """ def get_questions(self):
+        return self.questions """
