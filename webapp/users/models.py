@@ -5,18 +5,22 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-     
+
+    #* Additional
+    #...
+
 class Vote(models.Model):
     is_positive_vote = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votes")
+    answer = models.ForeignKey("Answer", on_delete=models.CASCADE, related_name="votes")
 
     #...
     def is_like(self):
         return self.is_positive_vote
     
     def get_user(self):
-        pass #* First, assign foreign key
+        return self.user
 
     def like(self):
         self.is_positive_vote = True
@@ -25,7 +29,7 @@ class Vote(models.Model):
         self.is_positive_vote = False
 
 class Topic(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=75)
     description = models.TextField()
     #? Resolve cardinal relationship to Question... ManyToMany, perhaps
 
@@ -46,3 +50,43 @@ class Topic(models.Model):
 
     """ def get_questions(self):
         return self.questions """
+
+class Answer(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+    #? Autoset...
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="answers")
+    #* votes is referenced
+    #question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
+
+    def _filter_votes(self, positive):
+        return [vote for vote in self.votes if vote.is_like() == positive]
+
+    def positive_votes(self):
+        return self._filter_votes(True)
+    
+    def negative_votes(self):
+        return self._filter_votes(False)
+
+    def get_question(self):
+        return self.question
+		
+    def get_user(self):
+        return self.user
+
+    def set_description(self, description):
+        self.description = description
+
+    def get_description(self):
+        return self.description
+	
+    def get_timestamp(self):
+        return self.timestamp
+
+    def add_vote(self, a_vote):
+        if any(vote.user == a_vote.user for vote in self.votes):
+            raise ValueError("Este usuario ya ha votado")
+        self.votes.append(a_vote)
+
+    def get_votes(self):
+        return self.votes
