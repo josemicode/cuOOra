@@ -1,14 +1,70 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-#? Reimplement, add CuOOra context
+#? Nullable fields needed in some cases...
+
 class User(AbstractUser):
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
     #...
+    #user_name = models.CharField(max_length=15, null=True)
+    #password = models.CharField(max_length=20, null=True)
     #* votes is referenced
     #* questions is referenced
+    #* answers is referenced
+    topics_of_interest = models.ManyToManyField("Topic", related_name="users")
+    following = models.ManyToManyField("User", related_name="followers")
+
+    def add_topic(self, a_topic):
+        self.topics_of_interest.append(a_topic)
+
+    def get_votes(self):
+        return self.votes
+
+    def add_question(self, a_question):
+        self.questions.append(a_question)
+
+    def get_username(self):
+        return self.username
+
+    def get_questions(self):
+        return self.questions
+
+    def follow(self, a_user):
+        self.following.append(a_user)
+
+    def stop_follow(self, a_user):
+        self.following.remove(a_user)
+
+    def get_answers(self):
+        return self.answers
+
+    def get_following(self):
+        return self.following
+
+    def add_vote(self, a_vote):
+        self.votes.append(a_vote)
+
+    def get_password(self):
+        return self.password
+
+    def add_answer(self, an_answer):
+        self.answers.append(an_answer) 
+
+    def get_topics_of_interest(self):
+        return self.topics_of_interest
+
+    def set_password(self, password):
+        self.password = password
+
+    def set_username(self, username):
+        self.username = username
+
+    def calculate_score(self):
+        question_score = sum(10 for q in self.questions if len(q.positive_votes()) > len(q.negative_votes()))
+        answer_score = sum(20 for a in self.answers if len(a.positive_votes()) > len(a.negative_votes()))
+        return question_score + answer_score
 
 class Answer(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -49,6 +105,9 @@ class Answer(models.Model):
 
     def get_votes(self):
         return self.votes
+    
+    def __str__(self):
+        return f"In response to <<{self.question.get_title()}>> by {self.user.get_username()}"
 
 class Topic(models.Model):
     name = models.CharField(max_length=75)
@@ -72,6 +131,9 @@ class Topic(models.Model):
 
     def get_questions(self):
         return self.questions
+    
+    def __str__(self):
+        return f"{self.get_name()}"
 
 class Question(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -135,6 +197,9 @@ class Question(models.Model):
         
         return sorted(self.answers, key=lambda a: len(a.positive_votes()) - len(a.negative_votes()), reverse=True)[0]
 
+    def __str__(self):
+        return f"{self.get_title()}"
+
 class Vote(models.Model):
     is_positive_vote = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -154,3 +219,6 @@ class Vote(models.Model):
 
     def dislike(self):
         self.is_positive_vote = False
+    
+    def __str__(self):
+        return f"By {self.user.get_username()}"
