@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from abc import ABC, abstractmethod
 
-#? Nullable fields needed in some cases...
+#! Modularize
 
 class User(AbstractUser):
     is_admin = models.BooleanField(default=False)
@@ -152,7 +152,7 @@ class Question(models.Model):
         return self.description
 
     def _filter_votes(self, positive: bool):
-        return [vote for vote in self.votes if vote.is_like() == positive]
+        return [vote for vote in self.votes.all() if vote.is_like() == positive]
 
     def positive_votes(self):
         return self._filter_votes(True)
@@ -201,6 +201,7 @@ class Question(models.Model):
     def __str__(self):
         return f"{self.get_title()}"
 
+#! Refactoring Votable
 class Vote(models.Model):
     is_positive_vote = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -232,10 +233,12 @@ class QuestionRetrievalStrategy(ABC):
 class SocialRetriever(QuestionRetrievalStrategy):
     def retrieve_questions(self, questions, a_user):
         following_questions = []
-        for follow in a_user.following:
-            following_questions.extend(follow.questions)
+        for follow in a_user.following.all():
+            following_questions.extend(follow.questions.all())
         sorted_q = sorted(following_questions, key=lambda q: len(q.positive_votes()))
-        q_ret = sorted_q[-min(100, len(sorted_q)):]
+        # q_ret = sorted_q[-min(100, len(sorted_q)):]
+        sorted_q.reverse()
+        q_ret = sorted_q
         return [q for q in q_ret if q.user != a_user]
 
 class TopicRetriever(QuestionRetrievalStrategy):
@@ -285,33 +288,33 @@ class QuestionRetriever: #!
         return PopularTodayRetriever()
 
 #? How to test...
-# class CuOOra:
-#     def __init__(self):
-#         self.questions = []
+class CuOOra:
+    def __init__(self):
+        self.questions = []
 
-#     def add_question(self, question):
-#         self.questions.append(question)
+    def add_question(self, question):
+        self.questions.append(question)
 
-#     def get_questions_by_type(self, type_, user):
-#         retriever_methods = {
-#             "social": QuestionRetriever.create_social,
-#             "topic": QuestionRetriever.create_topics,
-#             "news": QuestionRetriever.create_news,
-#             "popular": QuestionRetriever.create_popular_today,
-#         }
-#         if type_ not in retriever_methods:
-#             raise ValueError("Tipo de pregunta no válido")
-#         retriever = retriever_methods[type_]()
-#         return retriever.retrieve_questions(self.questions, user)
+    def get_questions_by_type(self, type_, user):
+        retriever_methods = {
+            "social": QuestionRetriever.create_social,
+            "topic": QuestionRetriever.create_topics,
+            "news": QuestionRetriever.create_news,
+            "popular": QuestionRetriever.create_popular_today,
+        }
+        if type_ not in retriever_methods:
+            raise ValueError("Tipo de pregunta no válido")
+        retriever = retriever_methods[type_]()
+        return retriever.retrieve_questions(self.questions, user)
 
-#     def get_social_questions_for_user(self, user):
-#         return self.get_questions_by_type("social", user)
+    def get_social_questions_for_user(self, user):
+        return self.get_questions_by_type("social", user)
 
-#     def get_topic_questions_for_user(self, user):
-#         return self.get_questions_by_type("topic", user)
+    def get_topic_questions_for_user(self, user):
+        return self.get_questions_by_type("topic", user)
 
-#     def get_news_questions_for_user(self, user):
-#         return self.get_questions_by_type("news", user)
+    def get_news_questions_for_user(self, user):
+        return self.get_questions_by_type("news", user)
 
-#     def get_popular_questions_for_user(self, user):
-#         return self.get_questions_by_type("popular", user)
+    def get_popular_questions_for_user(self, user):
+        return self.get_questions_by_type("popular", user)
