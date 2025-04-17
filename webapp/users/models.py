@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 from abc import ABC, abstractmethod
 
 #! Modularize
@@ -15,7 +17,7 @@ class User(AbstractUser):
     #* questions is referenced
     #* answers is referenced
     topics_of_interest = models.ManyToManyField("Topic", related_name="users")
-    following = models.ManyToManyField("User", related_name="followers", null=True, blank=True) #? No effect...
+    following = models.ManyToManyField("User", related_name="followers", blank=True) #? No effect...
 
     def add_topic(self, a_topic):
         self.topics_of_interest.append(a_topic)
@@ -67,22 +69,45 @@ class User(AbstractUser):
         answer_score = sum(20 for a in self.answers if len(a.positive_votes()) > len(a.negative_votes()))
         return question_score + answer_score
 
-class Answer(models.Model):
+class Votable(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+    def _filter_votes(self, positive):
+        return [vote for vote in self.votes if vote.is_like() == positive]
+    
+    def positive_votes(self):
+        return self._filter_votes(True)
+    
+    def negative_votes(self):
+        return self._filter_votes(False)
+    
+    def add_vote(self, a_vote):
+        if any(vote.user == a_vote.user for vote in self.votes):
+            raise ValueError("Este usuario ya ha votado")
+        self.votes.append(a_vote)
+    
+    def get_votes(self):
+        return self.votes
+
+class Answer(Votable):
+    #timestamp = models.DateTimeField(auto_now_add=True)
     description = models.TextField()
     #? Autoset...
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="answers")
     #* votes is referenced
     question = models.ForeignKey("Question", on_delete=models.CASCADE, related_name="answers")
 
-    def _filter_votes(self, positive):
+    """ def _filter_votes(self, positive):
         return [vote for vote in self.votes if vote.is_like() == positive]
 
     def positive_votes(self):
         return self._filter_votes(True)
     
     def negative_votes(self):
-        return self._filter_votes(False)
+        return self._filter_votes(False) """
 
     def get_question(self):
         return self.question
@@ -99,13 +124,13 @@ class Answer(models.Model):
     def get_timestamp(self):
         return self.timestamp
 
-    def add_vote(self, a_vote):
+    """ def add_vote(self, a_vote):
         if any(vote.user == a_vote.user for vote in self.votes):
             raise ValueError("Este usuario ya ha votado")
-        self.votes.append(a_vote)
+        self.votes.append(a_vote) 
 
     def get_votes(self):
-        return self.votes
+        return self.votes """
     
     def __str__(self):
         return f"In response to <<{self.question.get_title()}>> by {self.user.get_username()}"
@@ -136,8 +161,8 @@ class Topic(models.Model):
     def __str__(self):
         return f"{self.get_name()}"
 
-class Question(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True)
+class Question(Votable):
+    #timestamp = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     #* answers is referenced
@@ -151,14 +176,14 @@ class Question(models.Model):
     def get_description(self):
         return self.description
 
-    def _filter_votes(self, positive: bool):
+    """ def _filter_votes(self, positive: bool):
         return [vote for vote in self.votes.all() if vote.is_like() == positive]
 
     def positive_votes(self):
         return self._filter_votes(True)
     
     def negative_votes(self):
-        return self._filter_votes(False)
+        return self._filter_votes(False) """
 
     def get_topics(self):
         return self.topics
@@ -175,13 +200,13 @@ class Question(models.Model):
     def get_timestamp(self):
         return self.timestamp
 
-    def get_votes(self):
+    """ def get_votes(self):
         return self.votes
 
     def add_vote(self, a_vote):
         if any(vote.user == a_vote.user for vote in self.votes): 
             raise ValueError("Este usuario ya ha votado")
-        self.votes.append(a_vote)
+        self.votes.append(a_vote) """
 
     def add_topic(self, a_topic):
         if a_topic in self.topics:
@@ -205,9 +230,15 @@ class Question(models.Model):
 class Vote(models.Model):
     is_positive_vote = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votes")
-    answer = models.ForeignKey(Answer , on_delete=models.CASCADE, related_name="votes", null=True, blank=True)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="votes", null=True, blank=True)
+
+    """ answer = models.ForeignKey(Answer , on_delete=models.CASCADE, related_name="votes", null=True, blank=True)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="votes", null=True, blank=True) """
+
+    specific_subclass = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name="votes")
+    object_id = models.PositiveIntegerField()
+    votable = GenericForeignKey('specific_subclass', 'object_id')
 
     #...
     def is_like(self):
