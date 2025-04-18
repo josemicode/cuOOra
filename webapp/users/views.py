@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 from .models import User
+from .models import Question
 
 def users_view(request):
     users = User.objects.all()
@@ -11,3 +12,4 @@ def user_detail_view(request, user_id):
     user = User.objects.get(id=user_id)
     context = {"user": user}
     return render(request, "user_detail.html", context)
+

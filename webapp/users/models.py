@@ -162,7 +162,7 @@ class Topic(models.Model):
         return f"{self.get_name()}"
 
 class Question(Votable):
-    #timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     #* answers is referenced
@@ -207,12 +207,19 @@ class Question(Votable):
         if any(vote.user == a_vote.user for vote in self.votes): 
             raise ValueError("Este usuario ya ha votado")
         self.votes.append(a_vote) """
-
+    '''
     def add_topic(self, a_topic):
         if a_topic in self.topics:
             raise ValueError("El topico ya esta agregado.")
         self.topics.append(a_topic)
         a_topic.add_question(self)
+    '''
+    
+    def add_topic(self, a_topic):
+        if self.topics.filter(pk=a_topic.pk).exists():
+            raise ValueError("El tópico ya está agregado.")
+        self.topics.add(a_topic)
+
 
     def add_answer(self, answer):
         self.answers.append(answer)
