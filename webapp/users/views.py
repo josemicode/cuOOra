@@ -16,3 +16,4 @@ def user_detail_view(request, user_id):
 def user_list(request):
     users = User.objects.all()
     return render(request, 'users_list.html', {'users': users})
+

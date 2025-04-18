@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main class="p-6 max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">{{ question.title }}</h1>
+    <p class="text-lg text-gray-600 dark:text-gray-300">{{ question.description }}</p>
+
+   
+    <small class="text-base text-gray-600 dark:text-gray-300 mb-6 block text-right">Pregunta escrita por: {{ question.user.username }}</small>
+
+    <!-- Formulario de respuesta -->
+    <form method="POST" class="mb-6">
+        {% csrf_token %}
+        <textarea name="description" rows="4" class="w-full p-3 rounded border" placeholder="Escribe tu respuesta aquí..."></textarea>
+        <button type="submit" class="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Publicar Respuesta</button>
+    </form>
+
+    <!-- Lista de respuestas -->
+    <div>
+        <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Respuestas:</h3>
+
+        {% if respuestas %}
+            {% for respuesta in respuestas %}
+                <div class="bg-white dark:bg-[#2c3e50] p-4 rounded shadow mb-4">
+                    <p class="text-gray-800 dark:text-gray-200">{{ respuesta.description }}</p>  
+                    <small class="text-gray-500 dark:text-gray-400" >— {{ respuesta.user.username }}</small> 
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-gray-500">Aún no hay respuestas.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

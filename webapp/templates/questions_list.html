@@ -14,11 +14,14 @@
                 <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">{{ pregunta.description|truncatewords:20 }}</p>
     
                 <!-- Aquí están los tópicos -->
-                <div class="mt-4 flex flex-wrap space-x-2 text-sm text-blue-600 dark:text-blue-400">
+                <div class="mt-4 flex flex-wrap space-x-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
                     {% for topic in pregunta.topics.all %}
                         <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ topic.name }}</span>
                     {% endfor %}
                 </div>
+                <a href="{% url 'responder_pregunta' pregunta.id %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Responder
+                </a>                
             </div>
         </div>
         {% endfor %}
