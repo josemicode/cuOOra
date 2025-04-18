@@ -1,0 +1,47 @@
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}CuOOra{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900 font-sans">
+    <header class="flex justify-between items-center p-4 shadow">
+        <h1 class="text-3xl font-bold">CuOOra</h1>
+        <div class="flex gap-4">
+            <select id="navSelect" class="border border-gray-300 rounded px-2 py-1">
+                <option value="/home/">home</option>
+                <option value="/users/list/">Users</option>
+            </select>
+            <a href="/topics/" class="bg-gray-200 px-4 py-2 rounded">Topics</a>
+            <a href="/questions/" class="bg-gray-200 px-4 py-2 rounded">Preguntas</a>
+            <span class="font-semibold">usuario random</span>
+
+            <script>
+                const navSelect = document.getElementById('navSelect');
+                const currentPath = window.location.pathname;
+            
+                // Establecer la opción seleccionada según la URL actual
+                for (let i = 0; i < navSelect.options.length; i++) {
+                    if (navSelect.options[i].value === currentPath) {
+                        navSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            
+                // Redirigir al cambiar la opción
+                navSelect.addEventListener('change', function () {
+                    const selectedValue = this.value;
+                    if (selectedValue) {
+                        window.location.href = selectedValue;
+                    }
+                });
+            </script>
+
+        </div>
+    </header>
+
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,24 +1,95 @@
-<!-- base.html -->
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}CuOOra{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-white text-gray-900 font-sans">
-    <header class="flex justify-between items-center p-4 shadow">
-        <h1 class="text-3xl font-bold">CuOOra</h1>
-        <div class="flex gap-4">
-            <select class="border border-gray-300 rounded px-2 py-1">
-                <option>Social</option>
-            </select>
-            <a href="/users/topics/" class="bg-gray-200 px-4 py-2 rounded">Topics</a>
-            <a href="/users/questions/" class="bg-gray-200 px-4 py-2 rounded">Preguntas</a>
-            <span class="font-semibold">usuario random</span>
-        </div>
-    </header>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {% block content %}{% endblock %}
+    <style>
+        /* Animación suave para elementos interactivos */
+        .transition-custom {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+    
+</head>
+{% block extra_scripts %}{% endblock %}
+<body class="min-h-screen w-full bg-white text-gray-900 font-sans">
+
+
+    <!-- Header limpio y profesional -->
+    <header class="w-full shadow-sm sticky top-0 z-50 bg-white">
+        
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <!-- Logo interactivo -->
+        <a href="/home/" class="text-3xl font-semibold tracking-tight text-gray-900 hover:text-gray-700 hover:scale-105 transition-transform duration-200 -ml-14">
+            CuOOra
+        </a>
+
+        <nav class="flex items-center gap-4">
+            <select id="navSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 transition-custom">
+                <option value="/home/">Home</option>
+                <option value="/users/list/">Users</option>
+                <option value="/topics/">Topics</option>
+                <option value="/questions/">Preguntas</option>
+            </select>
+
+            <a href="/topics/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Topics</a>
+            <a href="/questions/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Preguntas</a>
+
+            <span class="ml-2 text-sm font-semibold text-gray-600">Usuario Random</span>
+        </nav>
+    </div>
+</header>
+
+    <!-- Contenido -->
+    <main class="flex-grow max-w-5xl mx-auto px-6 py-8 bg-white dark:bg-gray-800 rounded-xl shadow-md animate-fade-in">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    </style>
+
+    <!-- Script del select dinámico -->
+    <script>
+        const navSelect = document.getElementById('navSelect');
+        const currentPath = window.location.pathname;
+
+        for (let i = 0; i < navSelect.options.length; i++) {
+            if (navSelect.options[i].value === currentPath) {
+                navSelect.selectedIndex = i;
+                break;
+            }
+        }
+
+        navSelect.addEventListener('change', function () {
+            const selectedValue = this.value;
+            if (selectedValue) {
+                window.location.href = selectedValue;
+            }
+        });
+    </script>
+
+    <footer class="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-12">
+        <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+            <div class="mb-4 md:mb-0">
+                &copy; 2025 Jose Maria & Jose Miguel. Todos los derechos reservados.
+            </div>
+    
+            <div class="flex gap-6">
+                <a href="/about/" class="hover:text-gray-900 dark:hover:text-white transition">Sobre nosotros</a>
+                <a href="/contact/" class="hover:text-gray-900 dark:hover:text-white transition">Contacto</a>
+                <a href="https://github.com" target="_blank" class="hover:text-gray-900 dark:hover:text-white transition">GitHub</a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

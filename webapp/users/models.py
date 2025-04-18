@@ -16,6 +16,10 @@ class User(AbstractUser):
     #* votes is referenced
     #* questions is referenced
     #* answers is referenced
+    
+  
+   
+    
     topics_of_interest = models.ManyToManyField("Topic", related_name="users")
     following = models.ManyToManyField("User", related_name="followers", blank=True) #? No effect...
 

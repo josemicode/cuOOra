@@ -1,18 +1,30 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Users{% endblock %}
 
 {% block content %}
-<h1>Users list</h1>
+<main class="p-6">
+    <h1 class="text-3xl font-semibold text-gray-900 dark:text-white mb-6">Lista de Usuarios</h1>
 
-{% if users %}
-    <ul>
-        {% for user in users %}
-            <li>{{ user.username }} - {{ user.email }}</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No hay usuarios.</p>
-{% endif %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {% if users %}
+            {% for user in users %}
+            {% with forloop.counter|stringformat:"d" as avatar_number %}
+            <div class="max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer">
+                <div class="p-6 text-center">
+                    <img src="{% static 'avatars/avatar' %}{{ avatar_number }}.png" class="w-24 h-24 rounded-full mx-auto mb-4"
+                         onerror="this.onerror=null; this.src='{% static 'avatars/avatar1.png' %}'">
 
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ user.username }}</h3>
+                    <p class="text-gray-600 dark:text-gray-400">{{ user.email }}</p>
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        {% else %}
+            <p>No hay usuarios disponibles.</p>
+        {% endif %}
+    </div>
+</main>
 {% endblock %}

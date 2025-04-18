@@ -1,14 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Users{% endblock %}
+{% block title %}Bienvenido a CuOOra{% endblock %}
 
 {% block content %}
+<main class="p-6">
+    <!-- Sección de bienvenida -->
+    <section class="mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Bienvenido a CuOOra</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Un lugar donde puedes encontrar preguntas y respuestas sobre diversos temas. Únete a la comunidad y comienza a explorar.</p>
+    </section>
 
-    
-<h3 class="text-lg font-bold">{{ pregunta.title }}</h3>
-<p class="text-gray-600">{{ pregunta.description }}</p>
-<div class="flex justify-between mt-2 text-sm text-gray-500">
-    <span>{{ pregunta.user.username }}</span>
-</div>
+    <!-- Sección destacada con las primeras 4 preguntas -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Preguntas destacadas</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {% for pregunta in preguntas %}
+            <div class="max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ pregunta.title }}</h3>
+                    <p class="mt-2 text-gray-600 dark:text-gray-400">{{ pregunta.description|truncatewords:20 }}</p>
+                    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span>Publicado por {{ pregunta.user.username }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    <!-- Ver todas preguntas -->
+    <section class="text-center mb-12 ">
+        <a href="/questions/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition duration-300">Ver todas las preguntas</a>
+    </section>
 
+    <!-- Sección de topics destacados (máximo 4) -->
+    <section class="mb-12">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6">Topics destacados</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {% for topic in topics %}
+            <div class="max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-200">{{ topic.name }}</h3>
+                    <p class="text-gray-400">{{ topic.description|truncatewords:20 }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Ver todos los topics -->
+    <section class="text-center">
+        <a href="/questions/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition duration-300">Ver todos los topics</a>
+    </section>
+</main>
 {% endblock %}

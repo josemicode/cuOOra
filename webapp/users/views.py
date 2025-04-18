@@ -1,7 +1,7 @@
 from django.shortcuts import render
-
+import random
 from .models import User
-from .models import Question
+
 
 def users_view(request):
     users = User.objects.all()
@@ -13,3 +13,6 @@ def user_detail_view(request, user_id):
     context = {"user": user}
     return render(request, "user_detail.html", context)
 
+def user_list(request):
+    users = User.objects.all()
+    return render(request, 'users_list.html', {'users': users})
