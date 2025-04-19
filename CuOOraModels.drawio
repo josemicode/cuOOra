@@ -1,16 +1,34 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36" version="26.1.1">
   <diagram name="Page-1" id="iKgPyKmy4LgLmQeAzaMu">
-    <mxGraphModel dx="2647" dy="1538" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2165" dy="1258" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-11" value="&lt;i&gt;QuestionRetrievalStrategy&lt;/i&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="240" width="420" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-12" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-11">
+          <mxGeometry y="26" width="420" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-13" value="&lt;i&gt;+&amp;nbsp;retrieve_questions(questions: List[Question], a_user: User): List[Question]&lt;/i&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-11">
+          <mxGeometry y="34" width="420" height="26" as="geometry" />
+        </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hSo5fMFqvrhgl-bArkcm-3" target="hSo5fMFqvrhgl-bArkcm-77">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-2" value="questions" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="hSo5fMFqvrhgl-bArkcm-1">
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-2" value="questions" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" connectable="0" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-1">
           <mxGeometry x="0.0208" y="4" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-14" value="SocialRetriever" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="330" width="420" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-15" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-14">
+          <mxGeometry y="26" width="420" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-16" value="&lt;i&gt;+&amp;nbsp;retrieve_questions(questions: List[Question], a_user: User): List[Question]&lt;/i&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-14">
+          <mxGeometry y="34" width="420" height="26" as="geometry" />
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-3" value="CuOOra" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="580" y="240" width="360" height="190" as="geometry" />
@@ -35,24 +53,6 @@
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-10" value="+&amp;nbsp;get_news_questions_for_user(user: User): List[Question]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-3">
           <mxGeometry y="164" width="360" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-11" value="&lt;i&gt;QuestionRetrievalStrategy&lt;/i&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="120" y="240" width="420" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-12" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-11">
-          <mxGeometry y="26" width="420" height="8" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-13" value="&lt;i&gt;+&amp;nbsp;retrieve_questions(questions: List[Question], a_user: User): List[Question]&lt;/i&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-11">
-          <mxGeometry y="34" width="420" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-14" value="SocialRetriever" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="120" y="330" width="420" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-15" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-14">
-          <mxGeometry y="26" width="420" height="8" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-16" value="&lt;i&gt;+&amp;nbsp;retrieve_questions(questions: List[Question], a_user: User): List[Question]&lt;/i&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-14">
-          <mxGeometry y="34" width="420" height="26" as="geometry" />
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-17" value="TopicRetriever" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="120" y="420" width="420" height="60" as="geometry" />
@@ -82,7 +82,7 @@
           <mxGeometry y="34" width="420" height="26" as="geometry" />
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-26" value="QuestionRetriever" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="580" y="470" width="360" height="138" as="geometry" />
+          <mxGeometry x="580" y="360" width="360" height="138" as="geometry" />
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-27" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hSo5fMFqvrhgl-bArkcm-26">
           <mxGeometry y="26" width="360" height="8" as="geometry" />
@@ -469,17 +469,17 @@
         <mxCell id="hSo5fMFqvrhgl-bArkcm-162" value="*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="1300" y="360" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-163" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="845" y="188" width="30" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="hSo5fMFqvrhgl-bArkcm-164" value="*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="1365" y="188" width="30" height="30" as="geometry" />
-        </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-165" value="*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="975" y="258" width="30" height="30" as="geometry" />
         </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-163" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="845" y="188" width="30" height="30" as="geometry" />
+        </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-166" value="*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="955" y="318" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hSo5fMFqvrhgl-bArkcm-164" value="*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1365" y="188" width="30" height="30" as="geometry" />
         </mxCell>
         <mxCell id="hSo5fMFqvrhgl-bArkcm-167" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="975" y="738" width="30" height="30" as="geometry" />
