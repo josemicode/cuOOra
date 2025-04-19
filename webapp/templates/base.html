@@ -15,18 +15,18 @@
     
 </head>
 {% block extra_scripts %}{% endblock %}
-<body class="w-full bg-white text-gray-900 font-sans">
+<body class="w-full flex flex-col bg-white text-gray-900 font-sans">
 
 
     <!-- Header limpio y profesional -->
-    <header class="w-full shadow-sm sticky top-0 z-50 bg-white">
+    <header class="w-full shadow-md sticky top-0 z-50 bg-white">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <!-- Logo interactivo -->
             <a href="/home/" class="text-3xl font-semibold tracking-tight text-gray-900 hover:text-gray-700 hover:scale-105 transition-transform duration-200 -ml-14">
                 CuOOra
             </a>
     
-            <nav class="flex items-center gap-4">
+            <nav class="flex items-center gap-4 -mr-16">
                 <select id="navSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 transition-custom">
                     <option value="/home/">Home</option>
                     <option value="/users/list/">Users</option>
@@ -37,16 +37,17 @@
                 <a href="/topics/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Topics</a>
                 <a href="/questions/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Preguntas</a>
     
+                {% if user.is_authenticated %}
                 <!-- Menú de usuario -->
                 <div class="relative">
-                    <button id="userMenuBtn" class="ml-2 text-sm font-semibold text-gray-600 hover:text-blue-500 transition-custom">
-                        {{ request.user.username }}
+                    <button id="userMenuBtn" class="ml-2 text-sm font-semibold text-gray-600 hover:text-blue-500 transition-custom -mr-4">
+                        {{ user.username }}
                     </button>
-    
+                
                     <div id="userMenu" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg hidden">
                         <div class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                            <p><strong>{{ request.user.username }}</strong></p>
-                            <p>{{ request.user.email }}</p>
+                            <p><strong>{{ user.username }}</strong></p>
+                            <p>{{ user.email }}</p>
                         </div>
                         <div class="border-t border-gray-300 dark:border-gray-600">
                             <form method="post" action="{% url 'logout' %}" class="px-4 py-2">
@@ -58,6 +59,13 @@
                         </div>                        
                     </div>
                 </div>
+                {% else %}
+
+                <!-- Botón de login -->
+                <a href="{% url 'login' %}" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-custom">
+                    Iniciar sesión
+                </a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -81,9 +89,11 @@
     
 
     <!-- Contenido -->
-    <main class="flex-grow max-w-5xl mx-auto px-6 py-8 bg-white dark:bg-gray-800 rounded-xl shadow-md animate-fade-in">
-        {% block content %}{% endblock %}
-    </main>
+    {% block main %}
+        <main class="flex-grow max-w-5xl mx-auto px-6 py-8 bg-white dark:bg-gray-800 rounded-xl shadow-md animate-fade-in">
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}  
     
     <style>
     @keyframes fade-in {
@@ -115,7 +125,7 @@
         });
     </script>
 
-    <footer class="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-12 mb-0">
+    <footer class="w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mt-32 mb-0">
         <div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400">
             <div class="mb-4 md:mb-0">
                 &copy; 2025 Jose Maria & Jose Miguel. Todos los derechos reservados.

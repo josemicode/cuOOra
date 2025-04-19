@@ -103,3 +103,32 @@ def test_login(request):
         else:
             return render(request, 'error.html', {'error': 'Usuario o contraseña incorrectos'})
     return render(request, 'login_test.html')
+
+def home_view(request):
+    # --- Recommender ---
+    recommender = request.GET.get("recommender", "social")
+
+    if recommender == "popular":
+        preguntas = Question.objects.order_by('-num_likes')[:4]
+    elif recommender == "reciente":
+        preguntas = Question.objects.order_by('-created_at')[:4]
+    else:  # social o default
+        preguntas = Question.objects.order_by('?')[:4]  # o tu lógica "social"
+
+    # --- Topics ---
+    topic_order = request.GET.get("topic_order", "popular")
+
+    if topic_order == "recientes":
+        topics = Topic.objects.order_by('-created_at')[:4]
+    elif topic_order == "alfabetico":
+        topics = Topic.objects.order_by('name')[:4]
+    else:  # popular o default
+        topics = Topic.objects.order_by('-num_questions')[:4]  # o lo que uses como "popular"
+
+    context = {
+        "preguntas": preguntas,
+        "topics": topics,
+        "active_recommender": recommender,
+        "active_topic_order": topic_order,
+    }
+    return render(request, "home/home.html", context)

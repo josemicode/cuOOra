@@ -8,6 +8,7 @@ from home.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('home/', home, name='home'),
+    path('', home, name='home'),
     path('users/', include('users.urls'), name='users'),
     path('socials/', socials, name='socials'),
     path("questions/", questions_list_view, name = "questions_list"),
