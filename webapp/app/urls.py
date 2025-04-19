@@ -18,5 +18,6 @@ urlpatterns = [
     path("logout/", CustomLogoutView.as_view(next_page='home'), name="logout"),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('test-login/', test_login, name='test_login'),
+    path('api/topic/<int:id>/', topic_detail, name='topic-detail'),
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

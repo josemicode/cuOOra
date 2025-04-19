@@ -7,7 +7,8 @@ from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.views import LogoutView, LoginView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate
-
+from rest_framework.decorators import api_view
+from django.http import JsonResponse
 
 
 
@@ -28,7 +29,7 @@ def questions_list_view(request):
     preguntas = Question.objects.select_related("user").prefetch_related("topics").all().order_by("-timestamp")
     return render(request, "questions_list.html", {"preguntas": preguntas})
 
-@login_required(login_url='login')
+
 def pregunta_detalle_api(request, id):
     pregunta = get_object_or_404(Question, id=id)
     data = {
@@ -132,3 +133,12 @@ def home_view(request):
         "active_topic_order": topic_order,
     }
     return render(request, "home/home.html", context)
+
+
+def topic_detail(request, id):
+    topic = get_object_or_404(Topic, id=id)
+    return JsonResponse({
+        "id": topic.id,
+        "name": topic.name,
+        "description": topic.description,
+    })
