@@ -20,10 +20,10 @@ class User(AbstractUser):
     following = models.ManyToManyField("User", related_name="followers", blank=True) #? No effect...
 
     def add_topic(self, a_topic):
-        self.topics_of_interest.append(a_topic)
+        self.topics_of_interest.add(a_topic)
 
     def get_votes(self):
-        return self.votes
+        return self.votes.all()
 
     def add_question(self, a_question):
         self.questions.append(a_question)
@@ -32,31 +32,31 @@ class User(AbstractUser):
         return self.username
 
     def get_questions(self):
-        return self.questions
+        return self.questions.all()
 
     def follow(self, a_user):
-        self.following.append(a_user)
+        self.following.add(a_user)
 
     def stop_follow(self, a_user):
         self.following.remove(a_user)
 
     def get_answers(self):
-        return self.answers
+        return self.answers.all()
 
     def get_following(self):
-        return self.following
+        return self.following.all()
 
     def add_vote(self, a_vote):
-        self.votes.append(a_vote)
+        self.votes.add(a_vote)
 
     def get_password(self):
         return self.password
 
     def add_answer(self, an_answer):
-        self.answers.append(an_answer) 
+        self.answers.add(an_answer)
 
     def get_topics_of_interest(self):
-        return self.topics_of_interest
+        return self.topics_of_interest.all()
 
     def set_password(self, password):
         self.password = password
@@ -65,8 +65,8 @@ class User(AbstractUser):
         self.username = username
 
     def calculate_score(self):
-        question_score = sum(10 for q in self.questions if len(q.positive_votes()) > len(q.negative_votes()))
-        answer_score = sum(20 for a in self.answers if len(a.positive_votes()) > len(a.negative_votes()))
+        question_score = sum(10 for q in self.questions.all() if len(q.positive_votes()) > len(q.negative_votes()))
+        answer_score = sum(20 for a in self.answers.all() if len(a.positive_votes()) > len(a.negative_votes()))
         return question_score + answer_score
 
 class Votable(models.Model):
@@ -75,19 +75,25 @@ class Votable(models.Model):
     class Meta:
         abstract = True
 
-    def _filter_votes(self, positive):
-        return [vote for vote in self.votes if vote.is_like() == positive]
+    def _filter_votes(self, is_positive):
+        #return [vote for vote in self.votes if vote.is_like() == positive]
+        return self.votes.filter(is_positive_vote=is_positive)
     
     def positive_votes(self):
         return self._filter_votes(True)
     
     def negative_votes(self):
         return self._filter_votes(False)
+
+    """ def add_vote(self, a_vote):
+        if any(vote.user == a_vote.user for vote in self.votes.all()):
+            raise ValueError("Este usuario ya ha votado")
+        self.votes.append(a_vote) """
     
     def add_vote(self, a_vote):
-        if any(vote.user == a_vote.user for vote in self.votes):
-            raise ValueError("Este usuario ya ha votado")
-        self.votes.append(a_vote)
+        if self.votes.filter(pk=a_vote.pk).exists():
+            raise ValueError("Ya ha votado el usuario.")
+        self.votes.add(a_vote)
     
     def get_votes(self):
         return self.votes
@@ -141,7 +147,7 @@ class Topic(models.Model):
     #* questions is referenced
 
     def add_question(self, a_question):
-        self.questions.append(a_question)
+        self.questions.add(a_question)
 
     def get_description(self):
         return self.description
@@ -156,13 +162,13 @@ class Topic(models.Model):
         self.name = name
 
     def get_questions(self):
-        return self.questions
+        return self.questions.all()
     
     def __str__(self):
         return f"{self.get_name()}"
 
 class Question(Votable):
-    timestamp = models.DateTimeField(auto_now_add=True)
+    #timestamp = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
     #* answers is referenced
@@ -186,7 +192,7 @@ class Question(Votable):
         return self._filter_votes(False) """
 
     def get_topics(self):
-        return self.topics
+        return self.topics.all()
 
     def get_title(self):
         return self.title
@@ -220,15 +226,14 @@ class Question(Votable):
             raise ValueError("El tópico ya está agregado.")
         self.topics.add(a_topic)
 
-
     def add_answer(self, answer):
-        self.answers.append(answer)
+        self.answers.add(answer)
 
     def get_best_answer(self):
-        if not self.answers:
+        if self.answers.count() == 0:
             return None
         
-        return sorted(self.answers, key=lambda a: len(a.positive_votes()) - len(a.negative_votes()), reverse=True)[0]
+        return sorted(self.answers.all(), key=lambda a: len(a.positive_votes()) - len(a.negative_votes()), reverse=True)[0]
 
     def __str__(self):
         return f"{self.get_title()}"
@@ -283,7 +288,7 @@ class TopicRetriever(QuestionRetrievalStrategy):
     def retrieve_questions(self, questions, a_user):
         topics_questions = []
         for topic in a_user.get_topics_of_interest():
-            topics_questions.extend(topic.questions)
+            topics_questions.extend(topic.questions.all())
         sorted_q = sorted(topics_questions, key=lambda q: len(q.positive_votes()))
         q_ret = sorted_q[-min(100, len(sorted_q)):]
         return [q for q in q_ret if q.user != a_user]
@@ -326,33 +331,33 @@ class QuestionRetriever: #!
         return PopularTodayRetriever()
 
 #? How to test...
-class CuOOra:
-    def __init__(self):
-        self.questions = []
+# class CuOOra:
+#     def __init__(self):
+#         self.questions = []
 
-    def add_question(self, question):
-        self.questions.append(question)
+#     def add_question(self, question):
+#         self.questions.append(question)
 
-    def get_questions_by_type(self, type_, user):
-        retriever_methods = {
-            "social": QuestionRetriever.create_social,
-            "topic": QuestionRetriever.create_topics,
-            "news": QuestionRetriever.create_news,
-            "popular": QuestionRetriever.create_popular_today,
-        }
-        if type_ not in retriever_methods:
-            raise ValueError("Tipo de pregunta no válido")
-        retriever = retriever_methods[type_]()
-        return retriever.retrieve_questions(self.questions, user)
+#     def get_questions_by_type(self, type_, user):
+#         retriever_methods = {
+#             "social": QuestionRetriever.create_social,
+#             "topic": QuestionRetriever.create_topics,
+#             "news": QuestionRetriever.create_news,
+#             "popular": QuestionRetriever.create_popular_today,
+#         }
+#         if type_ not in retriever_methods:
+#             raise ValueError("Tipo de pregunta no válido")
+#         retriever = retriever_methods[type_]()
+#         return retriever.retrieve_questions(self.questions, user)
 
-    def get_social_questions_for_user(self, user):
-        return self.get_questions_by_type("social", user)
+#     def get_social_questions_for_user(self, user):
+#         return self.get_questions_by_type("social", user)
 
-    def get_topic_questions_for_user(self, user):
-        return self.get_questions_by_type("topic", user)
+#     def get_topic_questions_for_user(self, user):
+#         return self.get_questions_by_type("topic", user)
 
-    def get_news_questions_for_user(self, user):
-        return self.get_questions_by_type("news", user)
+#     def get_news_questions_for_user(self, user):
+#         return self.get_questions_by_type("news", user)
 
-    def get_popular_questions_for_user(self, user):
-        return self.get_questions_by_type("popular", user)
+#     def get_popular_questions_for_user(self, user):
+#         return self.get_questions_by_type("popular", user)
