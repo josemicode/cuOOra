@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from users.models import Question, SocialRetriever, Topic, Answer
+from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -107,14 +107,23 @@ def test_login(request):
 
 def home_view(request):
     # --- Recommender ---
-    recommender = request.GET.get("recommender", "social")
+    user = request.user
+    recommender = request.GET.get("recommender", "general")
+    preguntas_base = Question.objects.all()
 
     if recommender == "popular":
-        preguntas = Question.objects.order_by('-num_likes')[:4]
+        #? preguntas = Question.objects.order_by('-num_likes')[:4]
+        preguntas = PopularTodayRetriever().retrieve_questions(preguntas_base, user)
     elif recommender == "reciente":
-        preguntas = Question.objects.order_by('-created_at')[:4]
+        #? preguntas = Question.objects.order_by('-created_at')[:4]
+        preguntas = NewsRetriever().retrieve_questions(preguntas_base, user)
+    elif recommender == "relevante":
+        preguntas = TopicRetriever().retrieve_questions(preguntas_base, user)
+    elif recommender == "social":
+        preguntas = SocialRetriever().retrieve_questions(preguntas_base, user)
     else:  # social o default
-        preguntas = Question.objects.order_by('?')[:4]  # o tu lógica "social"
+        #? preguntas = Question.objects.order_by('?')[:4]  # o tu lógica "social"
+        preguntas = preguntas_base
 
     # --- Topics ---
     topic_order = request.GET.get("topic_order", "popular")
