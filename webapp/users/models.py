@@ -99,7 +99,7 @@ class Votable(models.Model):
         self.votes.add(a_vote)
     
     def get_votes(self):
-        return self.votes
+        return self.votes.all()
 
 class Answer(Votable):
     #timestamp = models.DateTimeField(auto_now_add=True)
