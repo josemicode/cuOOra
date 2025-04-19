@@ -75,6 +75,9 @@ class Votable(models.Model):
     class Meta:
         abstract = True
 
+    def get_timestamp(self):
+        return self.timestamp
+
     def _filter_votes(self, is_positive):
         #return [vote for vote in self.votes if vote.is_like() == positive]
         return self.votes.filter(is_positive_vote=is_positive)
@@ -127,8 +130,8 @@ class Answer(Votable):
     def get_description(self):
         return self.description
 	
-    def get_timestamp(self):
-        return self.timestamp
+    """ def get_timestamp(self):
+        return self.timestamp """
 
     """ def add_vote(self, a_vote):
         if any(vote.user == a_vote.user for vote in self.votes):
@@ -203,8 +206,8 @@ class Question(Votable):
     def get_user(self):
         return self.user
 
-    def get_timestamp(self):
-        return self.timestamp
+    """ def get_timestamp(self):
+        return self.timestamp """
 
     """ def get_votes(self):
         return self.votes
