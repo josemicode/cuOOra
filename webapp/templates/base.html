@@ -31,16 +31,38 @@
             </a>
     
             <nav class="flex items-center gap-4 -mr-16">
-                <select id="navSelect" class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 transition-custom">
+                {% if active_tab == 'responder' %}
+                  <select id="navSelect"
+                          onchange="location = this.value"
+                          class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800">
+                    <!-- Placeholder que apunta a esta misma página -->
+                    <option 
+                      value="{% url 'responder_pregunta' pk=question.pk %}" 
+                      selected
+                    >--------</option>
+              
+                    <!-- Resto de opciones -->
                     <option value="/home/">Home</option>
                     <option value="/users/list/">Users</option>
                     <option value="/topics/">Topics</option>
                     <option value="/questions/">Preguntas</option>
-                </select>
-    
-                <a href="/topics/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Topics</a>
-                <a href="/questions/" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-custom">Preguntas</a>
-    
+                    <option value="/answers/">Respuestas</option>
+                  </select>
+                {% else %}
+                  <select id="navSelect"
+                          onchange="location = this.value"
+                          class="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800">
+                    <option value="/home/"        {% if active_tab == 'home'      %}selected{% endif %}>Home</option>
+                    <option value="/users/list/"  {% if active_tab == 'users'     %}selected{% endif %}>Users</option>
+                    <option value="/topics/"      {% if active_tab == 'topics'    %}selected{% endif %}>Topics</option>
+                    <option value="/questions/"   {% if active_tab == 'questions' %}selected{% endif %}>Preguntas</option>
+                    <option value="/answers/"     {% if active_tab == 'answers'   %}selected{% endif %}>Respuestas</option>
+                  </select>
+                {% endif %}
+              
+                <!-- resto de tu menú -->
+                <a href="/topics/"   class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Topics</a>
+                <a href="/questions/"class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Preguntas</a>
                 {% if user.is_authenticated %}
                 <!-- Menú de usuario -->
                 <div class="relative">

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Respuestas{% endblock %}
+
+{% block content %}
+<main class="p-6">
+  <!-- Cabecera en blanco -->
+  <h2 class="text-xl font-semibold mb-6 text-white dark:text-white">
+    Respuestas publicadas: {{ answers|length }}
+  </h2>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {% for ans in answers %}
+      <div
+        class="bg-white dark:bg-[#34495e] rounded-lg shadow p-6 flex flex-col h-full"
+        data-answer-id="{{ ans.id }}"
+      >
+        <!-- Quién ha respondido -->
+        <p class="text-base font-semibold text-gray-900 dark:text-white mb-2">
+          {{ ans.user.username }} ha respondido:
+        </p>
+
+        <!-- Descripción que crecerá para rellenar espacio -->
+        <p class="text-base text-white dark:text-white mb-4 flex-grow">
+          {{ ans.description|truncatewords:25 }}
+        </p>
+
+        <!-- Botón Ver pregunta anclado al fondo del flex -->
+        <a
+          href="{% url 'responder_pregunta' pk=ans.question.pk %}"
+          class="inline-block mb-4 mt-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+        >
+          Ver pregunta
+        </a>
+
+        <!-- Votos (pegados al fondo) -->
+        <div class="flex items-center space-x-4">
+          <!-- 👍 Like -->
+          <button
+            class="like-btn inline-flex items-center space-x-1 text-xl transition hover:text-green-500
+                   {% if ans.user_liked %}text-green-500 dark:text-green-500{% endif %}"
+            data-id="{{ ans.id }}"
+            data-voted="{% if ans.user_liked %}like{% endif %}"
+          >
+            <span>👍</span>
+            <span class="like-count text-white {% if ans.user_liked %}font-bold{% else %}font-normal{% endif %}">
+              {{ ans.positive_votes_count }}
+            </span>
+          </button>
+
+          <!-- 👎 Dislike -->
+          <button
+            class="dislike-btn inline-flex items-center space-x-1 text-xl transition hover:text-red-500
+                   {% if ans.user_disliked %}text-red-500 dark:text-red-500{% endif %}"
+            data-id="{{ ans.id }}"
+            data-voted="{% if ans.user_disliked %}dislike{% endif %}"
+          >
+            <span>👎</span>
+            <span class="dislike-count text-white {% if ans.user_disliked %}font-bold{% else %}font-normal{% endif %}">
+              {{ ans.negative_votes_count }}
+            </span>
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Función para obtener cookie CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const csrftoken = getCookie('csrftoken');
+
+    document.querySelectorAll('[data-answer-id]').forEach(card => {
+      const id           = card.dataset.answerId;
+      const likeBtn      = card.querySelector('.like-btn');
+      const dislikeBtn   = card.querySelector('.dislike-btn');
+      const likeCount    = card.querySelector('.like-count');
+      const dislikeCount = card.querySelector('.dislike-count');
+
+      function sendVote(type, btn) {
+        const already = btn.dataset.voted === type;
+
+        fetch(`/api/respuesta/${id}/vote/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({ vote: type })
+        })
+        .then(r => r.json())
+        .then(data => {
+          // Actualiza contadores
+          likeCount.textContent    = data.positive_votes;
+          dislikeCount.textContent = data.negative_votes;
+
+          if (already) {
+            // Quita negrita y color del mismo voto
+            if (type === 'like') {
+              likeCount.classList.remove('font-bold');
+              likeBtn.classList.remove('text-green-500','dark:text-green-500');
+            } else {
+              dislikeCount.classList.remove('font-bold');
+              dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+            }
+            btn.dataset.voted = '';
+          } else {
+            // Marca negrita/color en el nuevo y quita en el opuesto
+            if (type === 'like') {
+              likeCount.classList.add('font-bold');
+              likeBtn.classList.add('text-green-500','dark:text-green-500');
+              dislikeCount.classList.remove('font-bold');
+              dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+              likeBtn.dataset.voted    = 'like';
+              dislikeBtn.dataset.voted = '';
+            } else {
+              dislikeCount.classList.add('font-bold');
+              dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+              likeCount.classList.remove('font-bold');
+              likeBtn.classList.remove('text-green-500','dark:text-green-500');
+              dislikeBtn.dataset.voted = 'dislike';
+              likeBtn.dataset.voted    = '';
+            }
+          }
+        })
+        .catch(console.error);
+      }
+
+      likeBtn.addEventListener('click',    () => sendVote('like',    likeBtn));
+      dislikeBtn.addEventListener('click', () => sendVote('dislike', dislikeBtn));
+    });
+  });
+</script>
+{% endblock %}

@@ -21,5 +21,5 @@ urlpatterns = [
     path('api/topic/<int:id>/', topic_detail, name='topic-detail'),
     path('api/pregunta/<int:id>/vote/', vote_pregunta_api, name='api_pregunta_vote'),
     path('api/respuesta/<int:id>/vote/', vote_respuesta_api, name='api_respuesta_vote'),
-
+    path('answers/', answers_list_view, name='answers_list'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

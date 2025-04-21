@@ -142,6 +142,7 @@ def responder_pregunta(request, pk):
     return render(request, 'responder_pregunta.html', {
         'question': question,
         'respuestas': respuestas,
+        'active_tab': 'responder',
     })
     
 @login_required
@@ -341,3 +342,43 @@ def vote_respuesta_api(request, id):
         'positive_votes': positive,
         'negative_votes': negative,
     })
+    
+    
+@login_required
+def answers_list_view(request):
+    user = request.user
+    # ContentType de Answer
+    ct = ContentType.objects.get_for_model(Answer)
+
+    # Subqueries para Exists
+    likes_qs = Vote.objects.filter(
+        user=user,
+        specific_subclass=ct,
+        object_id=OuterRef('pk'),
+        is_positive_vote=True
+    )
+    dislikes_qs = Vote.objects.filter(
+        user=user,
+        specific_subclass=ct,
+        object_id=OuterRef('pk'),
+        is_positive_vote=False
+    )
+
+    # Queryset de respuestas con anotaciones
+    answers = (
+        Answer.objects
+        .select_related('user', 'question')
+        .annotate(
+            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
+            negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False)),
+            user_liked=Exists(likes_qs),
+            user_disliked=Exists(dislikes_qs),
+        )
+        .order_by('-positive_votes_count', '-question__timestamp')  # primero las más votadas
+    )
+
+    return render(request, 'answers_list.html', {
+        'answers': answers,
+        'active_tab': 'answers',
+    })
+    
