@@ -12,9 +12,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
 from users.models import Vote
 from django.db.models import Count, Q, Max
-from users.models import SocialRetriever, TopicRetriever, NewsRetriever, PopularTodayRetriever
-
-
+from django.db.models import Exists, OuterRef
 
 
 
@@ -67,18 +65,19 @@ def questions_list_view(request):
 @login_required
 def pregunta_detalle_api(request, id):
     pregunta = get_object_or_404(Question, id=id)
+    ct = ContentType.objects.get_for_model(Question)
 
-    # Averiguamos si este usuario ya votó aquí
-    content_type = ContentType.objects.get_for_model(Question)
-    try:
-        vote = Vote.objects.get(
-            user=request.user,
-            specific_subclass=content_type,
-            object_id=pregunta.id
-        )
+    # En lugar de get(), usamos filter() y cogemos el último por timestamp
+    vote_qs = Vote.objects.filter(
+        user=request.user,
+        specific_subclass=ct,
+        object_id=pregunta.id
+    ).order_by('-timestamp')
+
+    vote = vote_qs.first()
+    user_vote = None
+    if vote:
         user_vote = 'like' if vote.is_positive_vote else 'dislike'
-    except Vote.DoesNotExist:
-        user_vote = None
 
     data = {
         'title': pregunta.title,
@@ -228,21 +227,48 @@ def topic_detail(request, id):
         "num_preguntas": num_preguntas,
     })
     
+    
 @login_required
 @require_POST
 def vote_pregunta_api(request, id):
-    pregunta = get_object_or_404(Question, id=id)
-    voto_tipo = request.POST.get('vote')       # “like” o “dislike”
-    is_like = voto_tipo == 'like'
+    user = request.user
+    question = get_object_or_404(Question, pk=id)
 
-    vote, created = Vote.objects.update_or_create(
-        user=request.user,
-        specific_subclass=ContentType.objects.get_for_model(Question),
-        object_id=pregunta.id,
-        defaults={'is_positive_vote': is_like}
-    )
+    # ¿qué tipo de voto pediste?
+    vote_type = request.POST.get('vote')
+    ct = ContentType.objects.get_for_model(Question)
+
+    # Busca si ya había un voto previo
+    existing = Vote.objects.filter(
+        user=user,
+        specific_subclass=ct,
+        object_id=question.id
+    ).order_by('-timestamp').first()
+
+    if existing and (
+        (vote_type == 'like'    and existing.is_positive_vote) or
+        (vote_type == 'dislike' and not existing.is_positive_vote)
+    ):
+        # Si clicas de nuevo el mismo, lo borramos
+        existing.delete()
+    else:
+        # En otro caso, creamos o actualizamos
+        if existing:
+            existing.is_positive_vote = (vote_type == 'like')
+            existing.save()
+        else:
+            Vote.objects.create(
+                user=user,
+                specific_subclass=ct,
+                object_id=question.id,
+                is_positive_vote=(vote_type == 'like')
+            )
+
+    # Recalcula los contadores
+    positive = question.votes.filter(is_positive_vote=True).count()
+    negative = question.votes.filter(is_positive_vote=False).count()
 
     return JsonResponse({
-        'positive_votes': pregunta.positive_votes().count(),
-        'negative_votes': pregunta.negative_votes().count(),
+        'positive_votes': positive,
+        'negative_votes': negative,
     })

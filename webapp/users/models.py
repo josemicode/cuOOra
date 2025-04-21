@@ -4,6 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from abc import ABC, abstractmethod
 from django.contrib.contenttypes.fields import GenericRelation
+from django.db.models import Count, Q
+
 
 
 #! Modularize
@@ -285,17 +287,16 @@ class QuestionRetrievalStrategy(ABC):
     @abstractmethod
     def retrieve_questions(self, questions, a_user):
         pass
-
 class SocialRetriever(QuestionRetrievalStrategy):
-    def retrieve_questions(self, questions, a_user):
-        following_questions = []
-        for follow in a_user.following.all():
-            following_questions.extend(follow.questions.all())
-        sorted_q = sorted(following_questions, key=lambda q: len(q.positive_votes()))
-        # q_ret = sorted_q[-min(100, len(sorted_q)):]
-        sorted_q.reverse()
-        q_ret = sorted_q
-        return [q for q in q_ret if q.user != a_user]
+    def retrieve_questions(self, questions_qs, a_user):
+        # 1) Sacamos los IDs de los usuarios a los que sigo
+        following_ids = a_user.following.values_list('id', flat=True)
+        # 2) Filtramos sólo las preguntas de esos usuarios
+        qs = questions_qs.filter(user__id__in=following_ids)
+        # 3) Ordenamos primero por número de votos positivos, luego por fecha
+        return qs.annotate(
+            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True))
+        ).order_by('-positive_votes_count', '-timestamp')
 
 class TopicRetriever(QuestionRetrievalStrategy):
     def retrieve_questions(self, questions, a_user):

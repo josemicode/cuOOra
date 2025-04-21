@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es" class="h-full">
 <head>
@@ -5,6 +6,7 @@
     <title>{% block title %}CuOOra{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 
     <style>
         /* Animación suave para elementos interactivos */
@@ -15,6 +17,9 @@
     
 </head>
 <body class="w-full flex flex-col bg-white text-gray-900 font-sans">
+    <form style="display:none;">
+        {% csrf_token %}
+      </form>
 
 
     <!-- Header limpio y profesional -->
@@ -137,6 +142,8 @@
             </div>
         </div>
     </footer>
+    <script src="{% static 'js/questions.js' %}"></script>
+  <!-- Aquí se inyectarán los bloques extra_scripts -->
     {% block extra_scripts %}{% endblock %}
 
 </body>

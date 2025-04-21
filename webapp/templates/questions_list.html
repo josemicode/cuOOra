@@ -4,221 +4,280 @@
 
 {% block content %}
 <main class="p-6">
-    <h2 class="text-xl text-gray-200 font-semibold mb-6">Preguntas publicadas: {{ preguntas|length }} </h2>
+  <h2 class="text-xl text-gray-200 font-semibold mb-6">
+    Preguntas publicadas: {{ preguntas|length }}
+  </h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {% for pregunta in preguntas %}
-        <div class="question-card max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer min-h-[250px]" data-id="{{ pregunta.id }}">
-            <div class="p-6 flex flex-col justify-between h-full">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ pregunta.title }}</h3>
-                <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">
-                  {{ pregunta.description|truncatewords:20 }}
-                </p>
-              
-                <!-- Votos: justo aquí -->
-                <div class="flex items-center space-x-4 mt-4 text-gray-600 dark:text-gray-300 mb-4">
-                    <span class="inline-flex items-center space-x-1 text-xl hover:text-green-500 transition">
-                      <span>👍</span>
-                      <!-- ESTE ID es clave -->
-                      <span id="card-like-count-{{ pregunta.id }}" class="font-semibold">
-                        {{ pregunta.positive_votes_count }}
-                      </span>
-                    </span>
-                    <span class="inline-flex items-center space-x-1 text-xl hover:text-red-500 transition">
-                      <span>👎</span>
-                      <!-- ESTE ID también -->
-                      <span id="card-dislike-count-{{ pregunta.id }}" class="font-semibold">
-                        {{ pregunta.negative_votes_count }}
-                      </span>
-                    </span>
-                  </div>
-              
-                        
-    
-                <!-- Aquí están los tópicos -->
-                <div class="mt-4 flex flex-wrap space-x-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
-                    {% for topic in pregunta.topics.all %}
-                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ topic.name }}</span>
-                    {% endfor %}
-                </div>
-                <a href="{% url 'responder_pregunta' pregunta.id %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    Responder
-                </a>                
-            </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {% for pregunta in preguntas %}
+      <div 
+        class="question-card max-w-sm w-full bg-white dark:bg-[#34495e]
+               rounded-lg shadow-lg overflow-hidden hover:scale-105
+               transform transition-all duration-300 cursor-pointer"
+        data-id="{{ pregunta.id }}"
+      >
+        <div class="p-6 flex flex-col justify-between h-full">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ pregunta.title }}
+          </h3>
+          <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">
+            {{ pregunta.description|truncatewords:20 }}
+          </p>
+
+          <!-- VOTOS -->
+          <div class="flex items-center space-x-4 mt-4 text-gray-600 dark:text-gray-300 mb-4">
+            <!-- 👍 Me gusta -->
+            <span
+              id="card-like-icon-{{ pregunta.id }}"
+              class="inline-flex items-center space-x-1 text-xl transition
+                     {% if pregunta.user_liked %}
+                       text-green-500 dark:text-green-500
+                     {% else %}
+                       hover:text-green-500
+                     {% endif %}"
+            >
+              <span>👍</span>
+              <span 
+                id="card-like-count-{{ pregunta.id }}"
+                class="font-semibold"
+              >
+                {{ pregunta.positive_votes_count }}
+              </span>
+            </span>
+
+            <!-- 👎 No me gusta -->
+            <span
+              id="card-dislike-icon-{{ pregunta.id }}"
+              class="inline-flex items-center space-x-1 text-xl transition
+                     {% if pregunta.user_disliked %}
+                       text-red-500 dark:text-red-500
+                     {% else %}
+                       hover:text-red-500
+                     {% endif %}"
+            >
+              <span>👎</span>
+              <span
+                id="card-dislike-count-{{ pregunta.id }}"
+                class="font-semibold"
+              >
+                {{ pregunta.negative_votes_count }}
+              </span>
+            </span>
+          </div>
+
+          <!-- TOPICS -->
+          <div class="mt-4 flex flex-wrap gap-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
+            {% for topic in pregunta.topics.all %}
+              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                {{ topic.name }}
+              </span>
+            {% endfor %}
+          </div>
+
+          <!-- PUBLICADO POR abajo a la derecha -->
+          <div class="mt-auto text-sm text-gray-500 dark:text-gray-400 text-right">
+            Publicado por <strong>{{ pregunta.user.username }}</strong>
+          </div>
         </div>
-        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Modal -->
+  <div 
+    id="modal"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center 
+           items-center hidden transition-opacity duration-300 ease-out"
+  >
+    <div
+      id="modal-content"
+      class="relative opacity-0 translate-y-4 transform backdrop-blur-md 
+             bg-white/30 dark:bg-white/10 border border-white/20 
+             dark:border-white/10 text-gray-900 dark:text-white 
+             rounded-2xl w-full max-w-3xl p-6 shadow-2xl 
+             transition-all duration-300 ease-out"
+    >
+      <button
+        id="close-btn"
+        class="absolute top-4 right-6 text-gray-600 dark:text-gray-300
+               hover:text-red-500 transition p-1 rounded-full
+               hover:bg-white/20 focus:outline-none"
+      >
+        <!-- ícono X -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" 
+                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h3 id="modal-title" class="text-2xl font-semibold mb-4"></h3>
+      <p id="modal-description" class="text-gray-300 dark:text-gray-300 mb-4"></p>
+      <div id="modal-user" class="text-sm text-gray-300 dark:text-gray-300 mb-4"></div>
+
+      <div class="flex justify-end space-x-6 mt-4 items-center">
+        <!-- Botón Me gusta -->
+        <button
+          id="like-btn"
+          class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 
+                 hover:text-green-500 transition p-0"
+        >
+          <span>👍</span>
+          <span id="like-count" class="font-bold">0</span>
+        </button>
+
+        <!-- Botón No me gusta -->
+        <button
+          id="dislike-btn"
+          class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 
+                 hover:text-red-500 transition p-0"
+        >
+          <span>👎</span>
+          <span id="dislike-count" class="font-bold">0</span>
+        </button>
+      </div>
     </div>
-
-    <!-- Modal -->
-    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center hidden transition-opacity duration-300 ease-out">
-        <div id="modal-content" class="relative opacity-0 translate-y-4 transform backdrop-blur-md bg-white/30 dark:bg-white/10 border border-white/20 dark:border-white/10 text-gray-900 dark:text-white rounded-2xl w-full max-w-3xl p-6 shadow-2xl transition-all duration-300 ease-out">
-            <button id="close-btn" class="absolute top-4 right-6 text-gray-600 dark:text-gray-300 hover:text-red-500 transition p-1 rounded-full hover:bg-white/20 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <h3 class="text-2xl font-semibold mb-4" id="modal-title"></h3>
-            <p id="modal-description" class="text-gray-300 dark:text-gray-300 mb-4"></p>
-            <div class="text-sm text-gray-300 dark:text-gray-300" id="modal-user"></div>
-            <div class="mt-4">
-
-                <div class="flex justify-end space-x-6 mt-4 items-center">
-                    <button id="like-btn"
-                        class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-green-500 transition p-0">
-                    <span>Me gusta</span>
-                    <span id="like-count" class="font-bold">0</span>
-                    </button>
-
-                  
-                    <button id="dislike-btn"
-                    class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-red-500 transition p-0">
-                        <span>No me gusta</span>
-                        <span id="dislike-count" class="font-bold">0</span>
-                    </button>
-
-                  </div>
-                  
-
-                
-            </div>
-        </div>
-    </div>
-
+  </div>
 </main>
 {% endblock %}
 {% block extra_scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const csrftoken    = document.querySelector('[name=csrfmiddlewaretoken]').value;
-  const modal        = document.getElementById('modal');
-  const content      = document.getElementById('modal-content');
-  const closeBtn     = document.getElementById('close-btn');
-  const likeBtn      = document.getElementById('like-btn');
-  const dislikeBtn   = document.getElementById('dislike-btn');
-  const likeCount    = document.getElementById('like-count');
-  const dislikeCount = document.getElementById('dislike-count');
+  // Obtén cualquier cookie por nombre
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
 
-  // 1) Abrir modal al clicar tarjeta
-  document.querySelectorAll('.question-card').forEach(card => {
-    card.addEventListener('click', () => openModal(card.dataset.id));
-  });
+  document.addEventListener('DOMContentLoaded', () => {
+    const csrftoken   = getCookie('csrftoken');
+    const modal       = document.getElementById('modal');
+    const content     = document.getElementById('modal-content');
+    const closeBtn    = document.getElementById('close-btn');
+    const likeBtn     = document.getElementById('like-btn');
+    const dislikeBtn  = document.getElementById('dislike-btn');
+    const likeCount   = document.getElementById('like-count');
+    const dislikeCount= document.getElementById('dislike-count');
 
-  // 2) Cerrar modal
-  closeBtn.addEventListener('click', closeModal);
+    // 1) Abrir modal al clicar tarjeta
+    document.querySelectorAll('.question-card').forEach(card => {
+      card.addEventListener('click', () => openModal(card.dataset.id));
+    });
 
-  // 3) Función para abrir y rellenar modal
-  function openModal(id) {
-    fetch(`/api/pregunta/${id}/`)
+    // 2) Cerrar modal
+    closeBtn.addEventListener('click', closeModal);
+
+    // 3) Rellenar y mostrar modal
+    function openModal(id) {
+      fetch(`/api/pregunta/${id}/`)
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('modal-title').textContent       = data.title;
+          document.getElementById('modal-description').textContent = data.description;
+          document.getElementById('modal-user').textContent        = `Publicado por ${data.username} el ${data.timestamp}`;
+          likeCount.textContent    = data.positive_votes;
+          dislikeCount.textContent = data.negative_votes;
+
+          likeBtn.classList.remove('text-green-500','dark:text-green-500');
+          dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+          likeBtn.dataset.voted    = '';
+          dislikeBtn.dataset.voted = '';
+
+          if (data.user_vote === 'like') {
+            likeBtn.classList.add('text-green-500','dark:text-green-500');
+            likeBtn.dataset.voted = 'like';
+          }
+          if (data.user_vote === 'dislike') {
+            dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+            dislikeBtn.dataset.voted = 'dislike';
+          }
+
+          likeBtn.dataset.id    = id;
+          dislikeBtn.dataset.id = id;
+
+          modal.classList.remove('hidden');
+          setTimeout(() => {
+            content.classList.replace('translate-y-4','translate-y-0');
+            content.classList.replace('opacity-0','opacity-100');
+          }, 10);
+        });
+    }
+
+    // 4) Cerrar modal
+    function closeModal() {
+      content.classList.replace('translate-y-0','translate-y-4');
+      content.classList.replace('opacity-100','opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    // 5) Enviar o quitar voto
+    function sendVote(type, btn) {
+      const id      = btn.dataset.id;
+      const already = btn.dataset.voted === type;
+
+      fetch(`/api/pregunta/${id}/vote/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({ vote: type })
+      })
       .then(r => r.json())
       .then(data => {
-        // Rellenar contenido
-        document.getElementById('modal-title').textContent       = data.title;
-        document.getElementById('modal-description').textContent = data.description;
-        document.getElementById('modal-user').textContent        = `Publicado por ${data.username} el ${data.timestamp}`;
         likeCount.textContent    = data.positive_votes;
         dislikeCount.textContent = data.negative_votes;
 
-        // Reset de clases y marcado previo
-        likeBtn.classList.remove('text-green-500');
-        dislikeBtn.classList.remove('text-red-500');
-        likeBtn.dataset.voted    = '';
-        dislikeBtn.dataset.voted = '';
-
-        // Si ya votó, persistimos color y data-voted
-        if (data.user_vote === 'like') {
-          likeBtn.classList.add('text-green-500');
-          likeBtn.dataset.voted = 'like';
+        if (already) {
+          btn.classList.remove(
+            type === 'like' ? 'text-green-500':'text-red-500',
+            type === 'like' ? 'dark:text-green-500':'dark:text-red-500'
+          );
+          btn.dataset.voted = '';
+        } else {
+          if (type === 'like') {
+            likeBtn.classList.add('text-green-500','dark:text-green-500');
+            dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+            likeBtn.dataset.voted    = 'like';
+            dislikeBtn.dataset.voted = '';
+          } else {
+            dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+            likeBtn.classList.remove('text-green-500','dark:text-green-500');
+            dislikeBtn.dataset.voted = 'dislike';
+            likeBtn.dataset.voted    = '';
+          }
         }
-        if (data.user_vote === 'dislike') {
-          dislikeBtn.classList.add('text-red-500');
-          dislikeBtn.dataset.voted = 'dislike';
-        }
 
-        // Guardar id de pregunta en botones
-        likeBtn.dataset.id    = id;
-        dislikeBtn.dataset.id = id;
-
-        // Mostrar modal con animación
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-          content.classList.replace('translate-y-4','translate-y-0');
-          content.classList.replace('opacity-0','opacity-100');
-        }, 10);
+        const cardLike  = document.getElementById(`card-like-count-${id}`);
+        const cardDislk = document.getElementById(`card-dislike-count-${id}`);
+        if (cardLike)  cardLike.textContent  = data.positive_votes;
+        if (cardDislk) cardDislk.textContent = data.negative_votes;
       });
-  }
+    }
 
-  // 4) Función para cerrar modal
-  function closeModal() {
-    content.classList.replace('translate-y-0','translate-y-4');
-    content.classList.replace('opacity-100','opacity-0');
-    setTimeout(() => modal.classList.add('hidden'), 300);
-  }
+    // 6) Listeners de click en botones
+    likeBtn.addEventListener('click',    () => sendVote('like',    likeBtn));
+    dislikeBtn.addEventListener('click', () => sendVote('dislike', dislikeBtn));
 
-  // 5) Función de envío de voto
-  function sendVote(type, btn) {
-    const id = btn.dataset.id;
-    fetch(`/api/pregunta/${id}/vote/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrftoken,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({ vote: type })
-    })
-    .then(r => r.json())
-    .then(data => {
-      // Actualizar modal
-      likeCount.textContent    = data.positive_votes;
-      dislikeCount.textContent = data.negative_votes;
-  
-      // Reset de clases (ambos modos)
-      likeBtn.classList.remove('text-green-500','dark:text-green-500');
-      dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
-  
-      // Persistencia de color (texto + dark)
-      if (type === 'like') {
-        likeBtn.classList.add('text-green-500','dark:text-green-500');
-        dislikeBtn.classList.add(); // asegurarte de limpiar el otro si lo necesitas
-      } else {
-        dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+    // 7) Hover sin quitar voto persistente
+    likeBtn.addEventListener('mouseover', () => likeBtn.classList.add('text-green-500','dark:text-green-500'));
+    likeBtn.addEventListener('mouseout',  () => {
+      if (likeBtn.dataset.voted !== 'like') {
+        likeBtn.classList.remove('text-green-500','dark:text-green-500');
       }
-  
-      // Y, de paso, la tarjeta también
-      const cardLike  = document.getElementById(`card-like-count-${id}`);
-      const cardDislk = document.getElementById(`card-dislike-count-${id}`);
-      if (cardLike)  cardLike.textContent  = data.positive_votes;
-      if (cardDislk) cardDislk.textContent = data.negative_votes;
     });
-  }
-  
-  
-
-  // 6) Listeners de click en botones
-  likeBtn.classList.remove('text-green-500','dark:text-green-500');
-dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
-
-// Si ya votaste…
-if (data.user_vote === 'like') {
-  likeBtn.classList.add('text-green-500','dark:text-green-500');
-}
-if (data.user_vote === 'dislike') {
-  dislikeBtn.classList.add('text-red-500','dark:text-red-500');
-}
-
-  // 7) Hover: solo mientras pasa el ratón, pero no quita el color si ya votaste
-  likeBtn.addEventListener('mouseover', () => likeBtn.classList.add('text-green-500'));
-  likeBtn.addEventListener('mouseout',  () => {
-    if (likeBtn.dataset.voted !== 'like') {
-      likeBtn.classList.remove('text-green-500');
-    }
+    dislikeBtn.addEventListener('mouseover', () => dislikeBtn.classList.add('text-red-500','dark:text-red-500'));
+    dislikeBtn.addEventListener('mouseout',  () => {
+      if (dislikeBtn.dataset.voted !== 'dislike') {
+        dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+      }
+    });
   });
-
-  dislikeBtn.addEventListener('mouseover', () => dislikeBtn.classList.add('text-red-500'));
-  dislikeBtn.addEventListener('mouseout',  () => {
-    if (dislikeBtn.dataset.voted !== 'dislike') {
-      dislikeBtn.classList.remove('text-red-500');
-    }
-  });
-});
 </script>
 {% endblock %}
