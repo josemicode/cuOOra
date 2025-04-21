@@ -20,15 +20,112 @@
         <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Respuestas:</h3>
 
         {% if respuestas %}
-            {% for respuesta in respuestas %}
-                <div class="bg-white dark:bg-[#2c3e50] p-4 rounded shadow mb-4">
-                    <p class="text-gray-800 dark:text-gray-200">{{ respuesta.description }}</p>  
-                    <small class="text-gray-500 dark:text-gray-400" >— {{ respuesta.user.username }}</small> 
-                </div>
-            {% endfor %}
+        {% for respuesta in respuestas %}
+          <div class="bg-white dark:bg-[#2c3e50] p-4 rounded shadow mb-4" data-answer-id="{{ respuesta.id }}">
+            <p class="text-gray-800 dark:text-gray-200">{{ respuesta.description }}</p>  
+            <small class="text-gray-500 dark:text-gray-400 mb-2 block">— {{ respuesta.user.username }}</small> 
+        
+            <div class="flex items-center space-x-4">
+              <!-- 👍 Like -->
+              <button
+                class="like-btn inline-flex items-center space-x-1 text-xl transition
+                       {% if respuesta.user_liked %}text-green-500{% else %}hover:text-green-500{% endif %}"
+                data-id="{{ respuesta.id }}"
+                data-voted="{% if respuesta.user_liked %}like{% endif %}"
+              >
+                <span>👍</span>
+                <span class="like-count font-semibold text-white">{{ respuesta.positive_votes_count }}</span>
+            </button>
+          
+              <!-- 👎 Dislike -->
+              <button
+                class="dislike-btn inline-flex items-center space-x-1 text-xl transition
+                       {% if respuesta.user_disliked %}text-red-500{% else %}hover:text-red-500{% endif %}"
+                data-id="{{ respuesta.id }}"
+                data-voted="{% if respuesta.user_disliked %}dislike{% endif %}"
+              >
+                <span>👎</span>
+                <span class="dislike-count font-semibold text-white">{{ respuesta.negative_votes_count }}</span>
+            </button>
+            </div>
+          </div>
+        {% endfor %}
+
         {% else %}
             <p class="text-gray-500">Aún no hay respuestas.</p>
         {% endif %}
     </div>
 </main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      });
+    }
+    return cookieValue;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const csrftoken = getCookie('csrftoken');
+
+    // Para cada respuesta, asigna listeners
+    document.querySelectorAll('[data-answer-id]').forEach(card => {
+      const id         = card.dataset.answerId;
+      const likeBtn    = card.querySelector('.like-btn');
+      const dislikeBtn = card.querySelector('.dislike-btn');
+      const likeCount  = card.querySelector('.like-count');
+      const dislikeCount = card.querySelector('.dislike-count');
+
+      function sendVote(type, btn) {
+        const already = btn.dataset.voted === type;
+        fetch(`/api/respuesta/${id}/vote/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: new URLSearchParams({ vote: type })
+        })
+        .then(r => r.json())
+        .then(data => {
+          // actualizar contadores
+          likeCount.textContent    = data.positive_votes;
+          dislikeCount.textContent = data.negative_votes;
+
+          // toggle clases y dataset.voted
+          if (already) {
+            btn.classList.remove(
+              type==='like' ? 'text-green-500':'text-red-500'
+            );
+            btn.dataset.voted = '';
+          } else {
+            if (type==='like') {
+              likeBtn.classList.add('text-green-500');
+              dislikeBtn.classList.remove('text-red-500');
+              likeBtn.dataset.voted = 'like';
+              dislikeBtn.dataset.voted = '';
+            } else {
+              dislikeBtn.classList.add('text-red-500');
+              likeBtn.classList.remove('text-green-500');
+              dislikeBtn.dataset.voted = 'dislike';
+              likeBtn.dataset.voted = '';
+            }
+          }
+        })
+        .catch(console.error);
+      }
+
+      likeBtn.addEventListener('click',    () => sendVote('like',    likeBtn));
+      dislikeBtn.addEventListener('click', () => sendVote('dislike', dislikeBtn));
+    });
+  });
+</script>
 {% endblock %}

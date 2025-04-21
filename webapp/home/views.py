@@ -16,6 +16,8 @@ from django.db.models import Exists, OuterRef
 
 
 
+
+
 def home(request):
     # Anotamos votos positivos y negativos
     preguntas = (
@@ -99,8 +101,7 @@ def topics(request):
 @login_required(login_url='login')
 def responder_pregunta(request, pk):
     question = get_object_or_404(Question, pk=pk)
-    respuestas = Answer.objects.filter(question=question)
-
+    # si vienen POST de crear respuesta, lo mantienes igual...
     if request.method == 'POST':
         contenido = request.POST.get('description')
         if contenido:
@@ -110,6 +111,33 @@ def responder_pregunta(request, pk):
                 description=contenido
             )
             return redirect('responder_pregunta', pk=question.pk)
+
+    # ContentType de Answer
+    ct = ContentType.objects.get_for_model(Answer)
+    # subqueries para Exists
+    likes_qs = Vote.objects.filter(
+        user=request.user,
+        specific_subclass=ct,
+        object_id=OuterRef('pk'),
+        is_positive_vote=True
+    )
+    dislikes_qs = Vote.objects.filter(
+        user=request.user,
+        specific_subclass=ct,
+        object_id=OuterRef('pk'),
+        is_positive_vote=False
+    )
+
+    respuestas = (
+        Answer.objects
+        .filter(question=question)
+        .annotate(
+            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
+            negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False)),
+            user_liked=Exists(likes_qs),
+            user_disliked=Exists(dislikes_qs),
+        )
+    )
 
     return render(request, 'responder_pregunta.html', {
         'question': question,
@@ -267,6 +295,47 @@ def vote_pregunta_api(request, id):
     # Recalcula los contadores
     positive = question.votes.filter(is_positive_vote=True).count()
     negative = question.votes.filter(is_positive_vote=False).count()
+
+    return JsonResponse({
+        'positive_votes': positive,
+        'negative_votes': negative,
+    })
+    
+    
+@login_required
+@require_POST
+def vote_respuesta_api(request, id):
+    # 1) Obtén la respuesta y el tipo de voto
+    answer    = get_object_or_404(Answer, pk=id)
+    vote_type = request.POST.get('vote')  # 'like' o 'dislike'
+    ct        = ContentType.objects.get_for_model(Answer)
+
+    # 2) Busca si ya hay un voto de este usuario
+    existing = Vote.objects.filter(
+        user=request.user,
+        specific_subclass=ct,
+        object_id=answer.id
+    ).first()
+
+    # 3) Toggle/actualización/creación
+    if existing:
+        if (vote_type == 'like'    and existing.is_positive_vote) or \
+           (vote_type == 'dislike' and not existing.is_positive_vote):
+            existing.delete()
+        else:
+            existing.is_positive_vote = (vote_type == 'like')
+            existing.save()
+    else:
+        Vote.objects.create(
+            user=request.user,
+            specific_subclass=ct,
+            object_id=answer.id,
+            is_positive_vote=(vote_type == 'like')
+        )
+
+    # 4) Recuento actualizado
+    positive = answer.votes.filter(is_positive_vote=True).count()
+    negative = answer.votes.filter(is_positive_vote=False).count()
 
     return JsonResponse({
         'positive_votes': positive,
