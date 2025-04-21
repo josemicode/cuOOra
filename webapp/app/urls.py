@@ -19,5 +19,5 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('test-login/', test_login, name='test_login'),
     path('api/topic/<int:id>/', topic_detail, name='topic-detail'),
-
+    path('api/pregunta/<int:id>/vote/', vote_pregunta_api, name='api_pregunta_vote'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

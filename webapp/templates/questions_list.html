@@ -8,10 +8,32 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {% for pregunta in preguntas %}
-        <div class="max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer min-h-[250px]" onclick="openModal('{{ pregunta.id }}')">
+        <div class="question-card max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300 cursor-pointer min-h-[250px]" data-id="{{ pregunta.id }}">
             <div class="p-6 flex flex-col justify-between h-full">
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ pregunta.title }}</h3>
-                <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">{{ pregunta.description|truncatewords:20 }}</p>
+                <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">
+                  {{ pregunta.description|truncatewords:20 }}
+                </p>
+              
+                <!-- Votos: justo aquí -->
+                <div class="flex items-center space-x-4 mt-4 text-gray-600 dark:text-gray-300 mb-4">
+                    <span class="inline-flex items-center space-x-1 text-xl hover:text-green-500 transition">
+                      <span>👍</span>
+                      <!-- ESTE ID es clave -->
+                      <span id="card-like-count-{{ pregunta.id }}" class="font-semibold">
+                        {{ pregunta.positive_votes_count }}
+                      </span>
+                    </span>
+                    <span class="inline-flex items-center space-x-1 text-xl hover:text-red-500 transition">
+                      <span>👎</span>
+                      <!-- ESTE ID también -->
+                      <span id="card-dislike-count-{{ pregunta.id }}" class="font-semibold">
+                        {{ pregunta.negative_votes_count }}
+                      </span>
+                    </span>
+                  </div>
+              
+                        
     
                 <!-- Aquí están los tópicos -->
                 <div class="mt-4 flex flex-wrap space-x-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
@@ -30,7 +52,7 @@
     <!-- Modal -->
     <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center hidden transition-opacity duration-300 ease-out">
         <div id="modal-content" class="relative opacity-0 translate-y-4 transform backdrop-blur-md bg-white/30 dark:bg-white/10 border border-white/20 dark:border-white/10 text-gray-900 dark:text-white rounded-2xl w-full max-w-3xl p-6 shadow-2xl transition-all duration-300 ease-out">
-            <button onclick="closeModal()" class="absolute top-4 right-6 text-gray-600 dark:text-gray-300 hover:text-red-500 transition p-1 rounded-full hover:bg-white/20 focus:outline-none">
+            <button id="close-btn" class="absolute top-4 right-6 text-gray-600 dark:text-gray-300 hover:text-red-500 transition p-1 rounded-full hover:bg-white/20 focus:outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -40,23 +62,22 @@
             <div class="text-sm text-gray-300 dark:text-gray-300" id="modal-user"></div>
             <div class="mt-4">
 
-                <div class="flex justify-end space-x-4 mt-4">
-                    <!-- Botón Me gusta -->
-                    <button class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-500 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                        </svg>
-                        <span>Me gusta</span>
+                <div class="flex justify-end space-x-6 mt-4 items-center">
+                    <button id="like-btn"
+                        class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-green-500 transition p-0">
+                    <span>Me gusta</span>
+                    <span id="like-count" class="font-bold">0</span>
                     </button>
 
-                    <!-- Botón No me gusta -->
-                    <button class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-red-500 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                  
+                    <button id="dislike-btn"
+                    class="inline-flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-red-500 transition p-0">
                         <span>No me gusta</span>
+                        <span id="dislike-count" class="font-bold">0</span>
                     </button>
-                </div>
+
+                  </div>
+                  
 
                 
             </div>
@@ -65,42 +86,113 @@
 
 </main>
 {% endblock %}
-
 {% block extra_scripts %}
 <script>
-    function openModal(id) {
-        fetch(`/api/pregunta/${id}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('modal-title').textContent = data.title;
-                document.getElementById('modal-description').textContent = data.description;
-                document.getElementById('modal-user').textContent = `Publicado por ${data.username} el ${data.timestamp}`;
+document.addEventListener('DOMContentLoaded', () => {
+  const csrftoken    = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const modal        = document.getElementById('modal');
+  const content      = document.getElementById('modal-content');
+  const closeBtn     = document.getElementById('close-btn');
+  const likeBtn      = document.getElementById('like-btn');
+  const dislikeBtn   = document.getElementById('dislike-btn');
+  const likeCount    = document.getElementById('like-count');
+  const dislikeCount = document.getElementById('dislike-count');
 
-                const modal = document.getElementById('modal');
-                const content = document.getElementById('modal-content');
+  // Abrir modal al click en tarjeta
+  document.querySelectorAll('.question-card').forEach(card => {
+    card.addEventListener('click', () => openModal(card.dataset.id));
+  });
+  // Cerrar modal
+  closeBtn.addEventListener('click', closeModal);
 
-                modal.classList.remove('hidden');
-                
-                // Animación
-                setTimeout(() => {
-                    content.classList.remove('opacity-0', 'translate-y-4');
-                    content.classList.add('opacity-100', 'translate-y-0');
-                }, 10);
-            });
-    }
+  // Mostrar el modal con datos
+  function openModal(id) {
+    fetch(`/api/pregunta/${id}/`)
+      .then(r => r.json())
+      .then(data => {
+        // Rellenar modal…
+        document.getElementById('modal-title').textContent       = data.title;
+        document.getElementById('modal-description').textContent = data.description;
+        document.getElementById('modal-user').textContent        = `Publicado por ${data.username} el ${data.timestamp}`;
+        likeCount.textContent    = data.positive_votes;
+        dislikeCount.textContent = data.negative_votes;
 
-    function closeModal() {
-        const modal = document.getElementById('modal');
-        const content = document.getElementById('modal-content');
+        // Preparar botones
+        likeBtn.dataset.id    = id;
+        dislikeBtn.dataset.id = id;
 
-        // Reversa de la animación
-        content.classList.remove('opacity-100', 'translate-y-0');
-        content.classList.add('opacity-0', 'translate-y-4');
+        // Marcar voto previo
+        likeBtn.classList.toggle('text-green-500', data.user_vote === 'like');
+        dislikeBtn.classList.toggle('text-red-500', data.user_vote === 'dislike');
+        likeBtn.dataset.voted    = data.user_vote === 'like'    ? 'like'    : '';
+        dislikeBtn.dataset.voted = data.user_vote === 'dislike' ? 'dislike' : '';
 
+        // Animación de apertura
+        modal.classList.remove('hidden');
         setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 300); // espera que termine la animación
-    }
-</script>
+          content.classList.replace('translate-y-4','translate-y-0');
+          content.classList.replace('opacity-0','opacity-100');
+        }, 10);
+      });
+  }
 
+  function closeModal() {
+    content.classList.replace('translate-y-0','translate-y-4');
+    content.classList.replace('opacity-100','opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+  }
+
+  // Función de voto
+  function sendVote(type, btn) {
+    const id = btn.dataset.id;
+    fetch(`/api/pregunta/${id}/vote/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({ vote: type })
+    })
+    .then(r => r.json())
+    .then(data => {
+      // 1) Actualizar modal
+      likeCount.textContent    = data.positive_votes;
+      dislikeCount.textContent = data.negative_votes;
+
+      // 2) Actualizar tarjeta correspondiente
+      const cardLike  = document.getElementById(`card-like-count-${id}`);
+      const cardDislk = document.getElementById(`card-dislike-count-${id}`);
+      if (cardLike)  cardLike.textContent  = data.positive_votes;
+      if (cardDislk) cardDislk.textContent = data.negative_votes;
+
+      // 3) Persistir color en modal
+      if (type === 'like') {
+        likeBtn.dataset.voted    = 'like';
+        dislikeBtn.dataset.voted = '';
+        likeBtn.classList.add('text-green-500');
+        dislikeBtn.classList.remove('text-red-500');
+      } else {
+        dislikeBtn.dataset.voted = 'dislike';
+        likeBtn.dataset.voted    = '';
+        dislikeBtn.classList.add('text-red-500');
+        likeBtn.classList.remove('text-green-500');
+      }
+    });
+  }
+
+  // Listeners de hover y click en el modal
+  likeBtn.addEventListener('click',    () => sendVote('like', likeBtn));
+  dislikeBtn.addEventListener('click', () => sendVote('dislike', dislikeBtn));
+
+  likeBtn.addEventListener('mouseover',  () => likeBtn.classList.add('text-green-500'));
+  likeBtn.addEventListener('mouseout',   () =>
+    likeBtn.classList.remove('text-green-500', likeBtn.dataset.voted === 'like')
+  );
+
+  dislikeBtn.addEventListener('mouseover', () => dislikeBtn.classList.add('text-red-500'));
+  dislikeBtn.addEventListener('mouseout',  () =>
+    dislikeBtn.classList.remove('text-red-500', dislikeBtn.dataset.voted === 'dislike')
+  );
+});
+</script>
 {% endblock %}

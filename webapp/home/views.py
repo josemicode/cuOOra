@@ -8,7 +8,11 @@ from django.contrib.auth.views import LogoutView, LoginView
 from django.urls import reverse_lazy
 from django.contrib.auth import authenticate
 from rest_framework.decorators import api_view
-from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.contenttypes.models import ContentType
+from users.models import Vote
+from django.db.models import Count, Q
+
 
 
 
@@ -26,18 +30,50 @@ def socials(request):
 
 @login_required(login_url='login')
 def questions_list_view(request):
-    preguntas = Question.objects.select_related("user").prefetch_related("topics").all().order_by("-timestamp")
+    preguntas = (
+        Question.objects
+        .select_related("user")
+        .prefetch_related("topics")
+        .annotate(
+            positive_votes_count=Count(
+                'votes',
+                filter=Q(votes__is_positive_vote=True)
+            ),
+            negative_votes_count=Count(
+                'votes',
+                filter=Q(votes__is_positive_vote=False)
+            )
+        )
+        .order_by("-timestamp")
+    )
     return render(request, "questions_list.html", {"preguntas": preguntas})
 
-
+@api_view(['GET'])
+@login_required
 def pregunta_detalle_api(request, id):
     pregunta = get_object_or_404(Question, id=id)
+
+    # Averiguamos si este usuario ya votó aquí
+    content_type = ContentType.objects.get_for_model(Question)
+    try:
+        vote = Vote.objects.get(
+            user=request.user,
+            specific_subclass=content_type,
+            object_id=pregunta.id
+        )
+        user_vote = 'like' if vote.is_positive_vote else 'dislike'
+    except Vote.DoesNotExist:
+        user_vote = None
+
     data = {
         'title': pregunta.title,
         'description': pregunta.description,
         'username': pregunta.user.username,
         'timestamp': pregunta.timestamp.strftime('%d %B %Y %H:%M'),
-        'topics': [t.name for t in pregunta.topics.all()]
+        'topics': [t.name for t in pregunta.topics.all()],
+        'positive_votes': pregunta.positive_votes().count(),
+        'negative_votes': pregunta.negative_votes().count(),
+        'user_vote': user_vote,
     }
     return JsonResponse(data)
 
@@ -105,43 +141,57 @@ def test_login(request):
             return render(request, 'error.html', {'error': 'Usuario o contraseña incorrectos'})
     return render(request, 'login_test.html')
 
+# views.py
+
+
 def home_view(request):
-    # --- Recommender ---
     user = request.user
     recommender = request.GET.get("recommender", "general")
-    preguntas_base = Question.objects.all()
 
+    # 1️⃣ Construyo la queryset base anotada con los conteos de votos
+    preguntas_base = (
+        Question.objects
+        .select_related('user')
+        .prefetch_related('topics')
+        .annotate(
+            positive_votes_count=Count(
+                'votes', filter=Q(votes__is_positive_vote=True)
+            ),
+            negative_votes_count=Count(
+                'votes', filter=Q(votes__is_positive_vote=False)
+            )
+        )
+    )
+
+    # 2️⃣ Aplico el recommender sobre esa queryset anotada
     if recommender == "popular":
-        #? preguntas = Question.objects.order_by('-num_likes')[:4]
         preguntas = PopularTodayRetriever().retrieve_questions(preguntas_base, user)
     elif recommender == "reciente":
-        #? preguntas = Question.objects.order_by('-created_at')[:4]
         preguntas = NewsRetriever().retrieve_questions(preguntas_base, user)
     elif recommender == "relevante":
         preguntas = TopicRetriever().retrieve_questions(preguntas_base, user)
     elif recommender == "social":
         preguntas = SocialRetriever().retrieve_questions(preguntas_base, user)
-    else:  # social o default
-        #? preguntas = Question.objects.order_by('?')[:4]  # o tu lógica "social"
-        preguntas = preguntas_base
+    else:
+        # “general”: convierto en lista para conservar las anotaciones
+        preguntas = list(preguntas_base)
 
-    # --- Topics ---
+    # 3️⃣ Topics destacados (igual que antes)
     topic_order = request.GET.get("topic_order", "popular")
-
     if topic_order == "recientes":
         topics = Topic.objects.order_by('-created_at')[:4]
     elif topic_order == "alfabetico":
         topics = Topic.objects.order_by('name')[:4]
-    else:  # popular o default
-        topics = Topic.objects.order_by('-num_questions')[:4]  # o lo que uses como "popular"
+    else:
+        topics = Topic.objects.order_by('-num_questions')[:4]
 
-    context = {
+    return render(request, "home.html", {
         "preguntas": preguntas,
         "topics": topics,
         "active_recommender": recommender,
         "active_topic_order": topic_order,
-    }
-    return render(request, "home/home.html", context)
+    })
+
 
 
 def topic_detail(request, id):
@@ -150,4 +200,23 @@ def topic_detail(request, id):
         "id": topic.id,
         "name": topic.name,
         "description": topic.description,
+    })
+    
+@login_required
+@require_POST
+def vote_pregunta_api(request, id):
+    pregunta = get_object_or_404(Question, id=id)
+    voto_tipo = request.POST.get('vote')       # “like” o “dislike”
+    is_like = voto_tipo == 'like'
+
+    vote, created = Vote.objects.update_or_create(
+        user=request.user,
+        specific_subclass=ContentType.objects.get_for_model(Question),
+        object_id=pregunta.id,
+        defaults={'is_positive_vote': is_like}
+    )
+
+    return JsonResponse({
+        'positive_votes': pregunta.positive_votes().count(),
+        'negative_votes': pregunta.negative_votes().count(),
     })

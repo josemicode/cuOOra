@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from abc import ABC, abstractmethod
+from django.contrib.contenttypes.fields import GenericRelation
+
 
 #! Modularize
 
@@ -70,6 +72,14 @@ class User(AbstractUser):
         return question_score + answer_score
 
 class Votable(models.Model):
+    
+    votes = GenericRelation(
+        'Vote',
+        content_type_field='specific_subclass',
+        object_id_field='object_id',
+        related_query_name='votable'
+    )
+    
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
