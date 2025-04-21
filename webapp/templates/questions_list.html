@@ -16,69 +16,57 @@
                transform transition-all duration-300 cursor-pointer"
         data-id="{{ pregunta.id }}"
       >
-        <div class="p-6 flex flex-col justify-between h-full">
-          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-            {{ pregunta.title }}
-          </h3>
-          <p class="mt-2 text-gray-600 dark:text-gray-400 flex-grow">
-            {{ pregunta.description|truncatewords:20 }}
-          </p>
-
-          <!-- VOTOS -->
-          <div class="flex items-center space-x-4 mt-4 text-gray-600 dark:text-gray-300 mb-4">
-            <!-- 👍 Me gusta -->
-            <span
-              id="card-like-icon-{{ pregunta.id }}"
-              class="inline-flex items-center space-x-1 text-xl transition
-                     {% if pregunta.user_liked %}
-                       text-green-500 dark:text-green-500
-                     {% else %}
-                       hover:text-green-500
-                     {% endif %}"
-            >
-              <span>👍</span>
-              <span 
-                id="card-like-count-{{ pregunta.id }}"
-                class="font-semibold"
-              >
-                {{ pregunta.positive_votes_count }}
-              </span>
+      <div class="p-6 flex flex-col justify-between h-full">
+        <!-- TÍTULO -->
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+          {{ pregunta.title }}
+        </h3>
+      
+        <!-- TOPICS (ahora justo bajo el título) -->
+        <div class="mt-2 flex flex-wrap gap-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
+          {% for topic in pregunta.topics.all %}
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              {{ topic.name }}
             </span>
-
-            <!-- 👎 No me gusta -->
-            <span
-              id="card-dislike-icon-{{ pregunta.id }}"
-              class="inline-flex items-center space-x-1 text-xl transition
-                     {% if pregunta.user_disliked %}
-                       text-red-500 dark:text-red-500
-                     {% else %}
-                       hover:text-red-500
-                     {% endif %}"
-            >
-              <span>👎</span>
-              <span
-                id="card-dislike-count-{{ pregunta.id }}"
-                class="font-semibold"
-              >
-                {{ pregunta.negative_votes_count }}
-              </span>
-            </span>
-          </div>
-
-          <!-- TOPICS -->
-          <div class="mt-4 flex flex-wrap gap-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
-            {% for topic in pregunta.topics.all %}
-              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                {{ topic.name }}
-              </span>
-            {% endfor %}
-          </div>
-
-          <!-- PUBLICADO POR abajo a la derecha -->
-          <div class="mt-auto text-sm text-gray-500 dark:text-gray-400 text-right">
-            Publicado por <strong>{{ pregunta.user.username }}</strong>
-          </div>
+          {% endfor %}
         </div>
+      
+        <!-- DESCRIPCIÓN -->
+        <p class="text-gray-600 dark:text-gray-400 flex-grow mb-4">
+          {{ pregunta.description|truncatewords:20 }}
+        </p>
+      
+        <!-- VOTOS -->
+        <div class="flex items-center space-x-4 text-gray-600 dark:text-gray-300 mb-4">
+          <!-- 👍 Me gusta -->
+          <span id="card-like-icon-{{ pregunta.id }}" class="inline-flex items-center space-x-1 text-xl transition {% if pregunta.user_liked %}text-green-500{% else %}hover:text-green-500{% endif %}">
+            <span>👍</span>
+            <span id="card-like-count-{{ pregunta.id }}" class="font-semibold">
+              {{ pregunta.positive_votes_count }}
+            </span>
+          </span>
+          <!-- 👎 No me gusta -->
+          <span id="card-dislike-icon-{{ pregunta.id }}" class="inline-flex items-center space-x-1 text-xl transition {% if pregunta.user_disliked %}text-red-500{% else %}hover:text-red-500{% endif %}">
+            <span>👎</span>
+            <span id="card-dislike-count-{{ pregunta.id }}" class="font-semibold">
+              {{ pregunta.negative_votes_count }}
+            </span>
+          </span>
+        </div>
+      
+        <!-- BOTÓN RESPONDER -->
+        <div class="mb-6">
+          <a href="{% url 'responder_pregunta' pk=pregunta.id %}"
+             class="block w-full text-center py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+            Responder
+          </a>
+        </div>
+      
+        <!-- PIE: publicador -->
+        <div class="text-sm text-gray-500 dark:text-gray-400 text-right">
+          Publicado por <strong>{{ pregunta.user.username }}</strong>
+        </div>
+      </div>
       </div>
     {% endfor %}
   </div>

@@ -257,6 +257,10 @@ class Question(Votable):
 class Vote(models.Model):
     is_positive_vote = models.BooleanField(default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = (
+            ("user", "specific_subclass", "object_id"),
+        )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="votes")
 
