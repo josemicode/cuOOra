@@ -11,15 +11,30 @@ from rest_framework.decorators import api_view
 from django.views.decorators.http import require_POST
 from django.contrib.contenttypes.models import ContentType
 from users.models import Vote
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Max
+from users.models import SocialRetriever, TopicRetriever, NewsRetriever, PopularTodayRetriever
+
 
 
 
 
 def home(request):
-    preguntas = Question.objects.select_related('user').all()[:4]
+    # Anotamos votos positivos y negativos
+    preguntas = (
+        Question.objects
+        .select_related('user')
+        .prefetch_related('topics')
+        .annotate(
+            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
+            negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False))
+        )
+        .order_by('-timestamp')[:4]   # sigues limitando a 4, si quieres
+    )
     topics = Topic.objects.all()[:4]
-    return render(request, 'home.html', {'preguntas': preguntas, 'topics':topics})
+    return render(request, 'home.html', {
+        'preguntas': preguntas,
+        'topics':    topics,
+    })
 
 def socials(request):
     user = request.user
@@ -145,61 +160,72 @@ def test_login(request):
 
 
 def home_view(request):
-    user = request.user
-    recommender = request.GET.get("recommender", "general")
-
-    # 1️⃣ Construyo la queryset base anotada con los conteos de votos
-    preguntas_base = (
+    user    = request.user
+    mode    = request.GET.get("recommender", "general")
+    
+    # 1️⃣ Base queryset anotada con votos
+    qs = (
         Question.objects
         .select_related('user')
         .prefetch_related('topics')
         .annotate(
-            positive_votes_count=Count(
-                'votes', filter=Q(votes__is_positive_vote=True)
-            ),
-            negative_votes_count=Count(
-                'votes', filter=Q(votes__is_positive_vote=False)
-            )
+            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
+            negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False))
         )
     )
 
-    # 2️⃣ Aplico el recommender sobre esa queryset anotada
-    if recommender == "popular":
-        preguntas = PopularTodayRetriever().retrieve_questions(preguntas_base, user)
-    elif recommender == "reciente":
-        preguntas = NewsRetriever().retrieve_questions(preguntas_base, user)
-    elif recommender == "relevante":
-        preguntas = TopicRetriever().retrieve_questions(preguntas_base, user)
-    elif recommender == "social":
-        preguntas = SocialRetriever().retrieve_questions(preguntas_base, user)
+    # 2️⃣ Aplico el retriever u orden por modos
+    if mode in ("news", "reciente"):
+        preguntas = qs.order_by('-timestamp')
+    elif mode == "popular":
+        preguntas = qs.order_by('-positive_votes_count', '-timestamp')
+    elif mode == "social":
+        preguntas = SocialRetriever().retrieve_questions(qs, user)
+    elif mode in ("topic", "relevante"):
+        preguntas = TopicRetriever().retrieve_questions(qs, user)
     else:
-        # “general”: convierto en lista para conservar las anotaciones
-        preguntas = list(preguntas_base)
+        preguntas = list(qs)
+    
+    # ✂️ Corto a 4 preguntas
+    preguntas = preguntas[:4]
 
-    # 3️⃣ Topics destacados (igual que antes)
+    # 3️⃣ Topics destacados
     topic_order = request.GET.get("topic_order", "popular")
     if topic_order == "recientes":
-        topics = Topic.objects.order_by('-created_at')[:4]
+        topics = (
+            Topic.objects
+            .annotate(last_question_time=Max('questions__timestamp'))
+            .order_by('-last_question_time')
+        )
     elif topic_order == "alfabetico":
-        topics = Topic.objects.order_by('name')[:4]
+        topics = Topic.objects.order_by('name')
     else:
-        topics = Topic.objects.order_by('-num_questions')[:4]
+        topics = (
+            Topic.objects
+            .annotate(num_questions=Count('questions'))
+            .order_by('-num_questions')
+        )
+
+    # ✂️ Corto a 4 topics
+    topics = topics[:4]
 
     return render(request, "home.html", {
-        "preguntas": preguntas,
-        "topics": topics,
-        "active_recommender": recommender,
-        "active_topic_order": topic_order,
+        "preguntas":           preguntas,
+        "topics":              topics,
+        "active_recommender":  mode,
+        "active_topic_order":  topic_order,
     })
-
+    
 
 
 def topic_detail(request, id):
     topic = get_object_or_404(Topic, id=id)
+    num_preguntas = topic.questions.count()
     return JsonResponse({
         "id": topic.id,
         "name": topic.name,
         "description": topic.description,
+        "num_preguntas": num_preguntas,
     })
     
 @login_required

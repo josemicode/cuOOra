@@ -106,11 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2) Cerrar modal
   closeBtn.addEventListener('click', closeModal);
 
-  // 3) Abrir y rellenar modal
+  // 3) Función para abrir y rellenar modal
   function openModal(id) {
     fetch(`/api/pregunta/${id}/`)
       .then(r => r.json())
       .then(data => {
+        // Rellenar contenido
         document.getElementById('modal-title').textContent       = data.title;
         document.getElementById('modal-description').textContent = data.description;
         document.getElementById('modal-user').textContent        = `Publicado por ${data.username} el ${data.timestamp}`;
@@ -118,18 +119,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dislikeCount.textContent = data.negative_votes;
 
         // Reset de clases y marcado previo
-        likeBtn.classList.remove('text-green-500','dark:text-green-500');
-        dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+        likeBtn.classList.remove('text-green-500');
+        dislikeBtn.classList.remove('text-red-500');
         likeBtn.dataset.voted    = '';
         dislikeBtn.dataset.voted = '';
 
         // Si ya votó, persistimos color y data-voted
         if (data.user_vote === 'like') {
-          likeBtn.classList.add('text-green-500','dark:text-green-500');
+          likeBtn.classList.add('text-green-500');
           likeBtn.dataset.voted = 'like';
         }
         if (data.user_vote === 'dislike') {
-          dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+          dislikeBtn.classList.add('text-red-500');
           dislikeBtn.dataset.voted = 'dislike';
         }
 
@@ -146,14 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // 4) Cerrar modal
+  // 4) Función para cerrar modal
   function closeModal() {
     content.classList.replace('translate-y-0','translate-y-4');
     content.classList.replace('opacity-100','opacity-0');
     setTimeout(() => modal.classList.add('hidden'), 300);
   }
 
-  // 5) Enviar voto y actualizar modal + tarjeta
+  // 5) Función de envío de voto
   function sendVote(type, btn) {
     const id = btn.dataset.id;
     fetch(`/api/pregunta/${id}/vote/`, {
@@ -166,52 +167,58 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .then(r => r.json())
     .then(data => {
-      // 5a) Actualizar modal
+      // Actualizar modal
       likeCount.textContent    = data.positive_votes;
       dislikeCount.textContent = data.negative_votes;
-
-      // 5b) Actualizar tarjeta
+  
+      // Reset de clases (ambos modos)
+      likeBtn.classList.remove('text-green-500','dark:text-green-500');
+      dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+  
+      // Persistencia de color (texto + dark)
+      if (type === 'like') {
+        likeBtn.classList.add('text-green-500','dark:text-green-500');
+        dislikeBtn.classList.add(); // asegurarte de limpiar el otro si lo necesitas
+      } else {
+        dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+      }
+  
+      // Y, de paso, la tarjeta también
       const cardLike  = document.getElementById(`card-like-count-${id}`);
       const cardDislk = document.getElementById(`card-dislike-count-${id}`);
       if (cardLike)  cardLike.textContent  = data.positive_votes;
       if (cardDislk) cardDislk.textContent = data.negative_votes;
-
-      // 5c) Reset de clases en modal
-      likeBtn.classList.remove('text-green-500','dark:text-green-500');
-      dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
-
-      // 5d) Persistir color y data-voted
-      if (type === 'like') {
-        likeBtn.classList.add('text-green-500','dark:text-green-500');
-        likeBtn.dataset.voted    = 'like';
-        dislikeBtn.dataset.voted = '';
-      } else {
-        dislikeBtn.classList.add('text-red-500','dark:text-red-500');
-        dislikeBtn.dataset.voted = 'dislike';
-        likeBtn.dataset.voted    = '';
-      }
     });
   }
+  
+  
 
   // 6) Listeners de click en botones
-  likeBtn.addEventListener('click',    () => sendVote('like', likeBtn));
-  dislikeBtn.addEventListener('click', () => sendVote('dislike', dislikeBtn));
+  likeBtn.classList.remove('text-green-500','dark:text-green-500');
+dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
 
-  // 7) Hover sin interferir con voto persistente
-  likeBtn.addEventListener('mouseover', () => likeBtn.classList.add('text-green-500','dark:text-green-500'));
+// Si ya votaste…
+if (data.user_vote === 'like') {
+  likeBtn.classList.add('text-green-500','dark:text-green-500');
+}
+if (data.user_vote === 'dislike') {
+  dislikeBtn.classList.add('text-red-500','dark:text-red-500');
+}
+
+  // 7) Hover: solo mientras pasa el ratón, pero no quita el color si ya votaste
+  likeBtn.addEventListener('mouseover', () => likeBtn.classList.add('text-green-500'));
   likeBtn.addEventListener('mouseout',  () => {
     if (likeBtn.dataset.voted !== 'like') {
-      likeBtn.classList.remove('text-green-500','dark:text-green-500');
+      likeBtn.classList.remove('text-green-500');
     }
   });
 
-  dislikeBtn.addEventListener('mouseover', () => dislikeBtn.classList.add('text-red-500','dark:text-red-500'));
+  dislikeBtn.addEventListener('mouseover', () => dislikeBtn.classList.add('text-red-500'));
   dislikeBtn.addEventListener('mouseout',  () => {
     if (dislikeBtn.dataset.voted !== 'dislike') {
-      dislikeBtn.classList.remove('text-red-500','dark:text-red-500');
+      dislikeBtn.classList.remove('text-red-500');
     }
   });
 });
 </script>
 {% endblock %}
-
