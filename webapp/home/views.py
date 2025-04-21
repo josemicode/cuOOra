@@ -1,25 +1,37 @@
+# Django shortcuts
 from django.shortcuts import render, get_object_or_404, redirect
-from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer
+
+# Models
+from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer, Vote
+# —> DUPLICADO más abajo (ver nota)
+
+# HTTP y JSON
 from django.http import JsonResponse
+
+# Autenticación y usuarios
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.views import LogoutView, LoginView
-from django.urls import reverse_lazy
 from django.contrib.auth import authenticate
+
+# URLs
+from django.urls import reverse_lazy
+
+# DRF
 from rest_framework.decorators import api_view
+
+# Protección de vistas
 from django.views.decorators.http import require_POST
+
+# Content types (para votos genéricos)
 from django.contrib.contenttypes.models import ContentType
-from users.models import Vote
-from django.db.models import Count, Q, Max
-from django.db.models import Exists, OuterRef
 
-
-
+# Modelos de Django (ORM)
+from django.db.models import Count, Q, Max, Exists, OuterRef
 
 
 def home(request):
-    # Anotamos votos positivos y negativos
     preguntas = (
         Question.objects
         .select_related('user')
@@ -28,7 +40,7 @@ def home(request):
             positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
             negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False))
         )
-        .order_by('-timestamp')[:4]   # sigues limitando a 4, si quieres
+        .order_by('-timestamp')[:4] 
     )
     topics = Topic.objects.all()[:4]
     return render(request, 'home.html', {
@@ -42,6 +54,7 @@ def socials(request):
     retrieved_questions = SocialRetriever().retrieve_questions(questions, user)
     context = {"questions": retrieved_questions}
     return render(request, 'recommended.html', context)
+
 
 @login_required(login_url='login')
 def questions_list_view(request):
@@ -63,13 +76,13 @@ def questions_list_view(request):
     )
     return render(request, "questions_list.html", {"preguntas": preguntas})
 
+
 @api_view(['GET'])
 @login_required
 def pregunta_detalle_api(request, id):
     pregunta = get_object_or_404(Question, id=id)
     ct = ContentType.objects.get_for_model(Question)
 
-    # En lugar de get(), usamos filter() y cogemos el último por timestamp
     vote_qs = Vote.objects.filter(
         user=request.user,
         specific_subclass=ct,
@@ -101,7 +114,6 @@ def topics(request):
 @login_required(login_url='login')
 def responder_pregunta(request, pk):
     question = get_object_or_404(Question, pk=pk)
-    # si vienen POST de crear respuesta, lo mantienes igual...
     if request.method == 'POST':
         contenido = request.POST.get('description')
         if contenido:
@@ -112,15 +124,15 @@ def responder_pregunta(request, pk):
             )
             return redirect('responder_pregunta', pk=question.pk)
 
-    # ContentType de Answer
     ct = ContentType.objects.get_for_model(Answer)
-    # subqueries para Exists
+    
     likes_qs = Vote.objects.filter(
         user=request.user,
         specific_subclass=ct,
         object_id=OuterRef('pk'),
         is_positive_vote=True
     )
+    
     dislikes_qs = Vote.objects.filter(
         user=request.user,
         specific_subclass=ct,
@@ -152,7 +164,7 @@ def update_username(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Tu nombre de usuario ha sido actualizado.")
-            return redirect('home')  # O la página a la que quieras redirigir después
+            return redirect('home')
     else:
         form = UserChangeForm(instance=request.user)
     
@@ -164,7 +176,7 @@ class CustomLogoutView(LogoutView):
     
 
 class CustomLoginView(LoginView):
-    template_name = 'login.html'  # Ruta a tu template
+    template_name = 'login.html'
     redirect_authenticated_user = True
 
 
@@ -184,14 +196,13 @@ def test_login(request):
             return render(request, 'error.html', {'error': 'Usuario o contraseña incorrectos'})
     return render(request, 'login_test.html')
 
-# views.py
 
 
 def home_view(request):
     user    = request.user
     mode    = request.GET.get("recommender", "general")
     
-    # 1️⃣ Base queryset anotada con votos
+    
     qs = (
         Question.objects
         .select_related('user')
@@ -202,7 +213,7 @@ def home_view(request):
         )
     )
 
-    # 2️⃣ Aplico el retriever u orden por modos
+ 
     if mode in ("news", "reciente"):
         preguntas = qs.order_by('-timestamp')
     elif mode == "popular":
@@ -214,10 +225,10 @@ def home_view(request):
     else:
         preguntas = list(qs)
     
-    # ✂️ Corto a 4 preguntas
+   
     preguntas = preguntas[:4]
 
-    # 3️⃣ Topics destacados
+    
     topic_order = request.GET.get("topic_order", "popular")
     if topic_order == "recientes":
         topics = (
@@ -234,7 +245,7 @@ def home_view(request):
             .order_by('-num_questions')
         )
 
-    # ✂️ Corto a 4 topics
+   
     topics = topics[:4]
 
     return render(request, "home.html", {
@@ -263,11 +274,9 @@ def vote_pregunta_api(request, id):
     user = request.user
     question = get_object_or_404(Question, pk=id)
 
-    # ¿qué tipo de voto pediste?
     vote_type = request.POST.get('vote')
     ct = ContentType.objects.get_for_model(Question)
 
-    # Busca si ya había un voto previo
     existing = Vote.objects.filter(
         user=user,
         specific_subclass=ct,
@@ -278,10 +287,10 @@ def vote_pregunta_api(request, id):
         (vote_type == 'like'    and existing.is_positive_vote) or
         (vote_type == 'dislike' and not existing.is_positive_vote)
     ):
-        # Si clicas de nuevo el mismo, lo borramos
+      
         existing.delete()
     else:
-        # En otro caso, creamos o actualizamos
+      
         if existing:
             existing.is_positive_vote = (vote_type == 'like')
             existing.save()
@@ -293,7 +302,7 @@ def vote_pregunta_api(request, id):
                 is_positive_vote=(vote_type == 'like')
             )
 
-    # Recalcula los contadores
+   
     positive = question.votes.filter(is_positive_vote=True).count()
     negative = question.votes.filter(is_positive_vote=False).count()
 
@@ -306,19 +315,18 @@ def vote_pregunta_api(request, id):
 @login_required
 @require_POST
 def vote_respuesta_api(request, id):
-    # 1) Obtén la respuesta y el tipo de voto
+    
     answer    = get_object_or_404(Answer, pk=id)
     vote_type = request.POST.get('vote')  # 'like' o 'dislike'
     ct        = ContentType.objects.get_for_model(Answer)
 
-    # 2) Busca si ya hay un voto de este usuario
+   
     existing = Vote.objects.filter(
         user=request.user,
         specific_subclass=ct,
         object_id=answer.id
     ).first()
 
-    # 3) Toggle/actualización/creación
     if existing:
         if (vote_type == 'like'    and existing.is_positive_vote) or \
            (vote_type == 'dislike' and not existing.is_positive_vote):
@@ -334,7 +342,6 @@ def vote_respuesta_api(request, id):
             is_positive_vote=(vote_type == 'like')
         )
 
-    # 4) Recuento actualizado
     positive = answer.votes.filter(is_positive_vote=True).count()
     negative = answer.votes.filter(is_positive_vote=False).count()
 
@@ -347,10 +354,8 @@ def vote_respuesta_api(request, id):
 @login_required
 def answers_list_view(request):
     user = request.user
-    # ContentType de Answer
     ct = ContentType.objects.get_for_model(Answer)
 
-    # Subqueries para Exists
     likes_qs = Vote.objects.filter(
         user=user,
         specific_subclass=ct,
@@ -364,7 +369,6 @@ def answers_list_view(request):
         is_positive_vote=False
     )
 
-    # Queryset de respuestas con anotaciones
     answers = (
         Answer.objects
         .select_related('user', 'question')

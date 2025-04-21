@@ -66,7 +66,8 @@
 {% endblock %}
 {% block extra_scripts %}
 <script>
-  // Función para obtener la cookie CSRF
+   // getCookie para guardar y mostrar visualmente si el usuario ha votado y el que
+  // Función para obtener cookie CSRF
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -108,7 +109,7 @@
           dislikeCount.textContent = data.negative_votes;
 
           if (already) {
-            // Si clicaste de nuevo el mismo, quita negrita
+            // Si clicas de nuevo el mismo, quita negrita
             if (type === 'like') {
               likeCount.classList.remove('font-bold');
             } else {

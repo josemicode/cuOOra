@@ -64,7 +64,7 @@
                       {% endfor %}
                     </div>
                 
-                    <!-- PUBLICADO POR abajo y a la derecha -->
+                    <!-- PUBLICADO POR -->
                     <div class="mt-auto text-sm text-gray-500 dark:text-gray-400 text-right">
                       Publicado por <strong>{{ pregunta.user.username }}</strong>
                     </div>
@@ -146,7 +146,7 @@
 
                 modal.classList.remove('hidden');
                 
-                // Animación
+                
                 setTimeout(() => {
                     content.classList.remove('opacity-0', 'translate-y-4');
                     content.classList.add('opacity-100', 'translate-y-0');
@@ -158,13 +158,13 @@
         const modal = document.getElementById('modal');
         const content = document.getElementById('modal-content');
 
-        // Reversa de la animación
+        
         content.classList.remove('opacity-100', 'translate-y-0');
         content.classList.add('opacity-0', 'translate-y-4');
 
         setTimeout(() => {
             modal.classList.add('hidden');
-        }, 300); // espera que termine la animación
+        }, 300); 
     }
 </script>
 <script>

@@ -4,7 +4,7 @@
 
 {% block content %}
 <main class="p-6">
-  <!-- Cabecera en blanco -->
+  <!-- Cabecera -->
   <h2 class="text-xl font-semibold mb-6 text-white dark:text-white">
     Respuestas publicadas: {{ answers|length }}
   </h2>
@@ -25,7 +25,7 @@
           {{ ans.description|truncatewords:25 }}
         </p>
 
-        <!-- Botón Ver pregunta anclado al fondo del flex -->
+        <!-- Botón Ver pregunta anclado -->
         <a
           href="{% url 'responder_pregunta' pk=ans.question.pk %}"
           class="inline-block mb-4 mt-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
@@ -33,7 +33,7 @@
           Ver pregunta
         </a>
 
-        <!-- Votos (pegados al fondo) -->
+        <!-- Votos -->
         <div class="flex items-center space-x-4">
           <!-- 👍 Like -->
           <button
@@ -69,6 +69,7 @@
 
 {% block extra_scripts %}
 <script>
+  // getCookie para guardar y mostrar visualmente si el usuario ha votado y el que
   // Función para obtener cookie CSRF
   function getCookie(name) {
     let cookieValue = null;
@@ -106,12 +107,11 @@
         })
         .then(r => r.json())
         .then(data => {
-          // Actualiza contadores
           likeCount.textContent    = data.positive_votes;
           dislikeCount.textContent = data.negative_votes;
 
           if (already) {
-            // Quita negrita y color del mismo voto
+           
             if (type === 'like') {
               likeCount.classList.remove('font-bold');
               likeBtn.classList.remove('text-green-500','dark:text-green-500');
@@ -121,7 +121,6 @@
             }
             btn.dataset.voted = '';
           } else {
-            // Marca negrita/color en el nuevo y quita en el opuesto
             if (type === 'like') {
               likeCount.classList.add('font-bold');
               likeBtn.classList.add('text-green-500','dark:text-green-500');

@@ -17,12 +17,13 @@
         data-id="{{ pregunta.id }}"
       >
       <div class="p-6 flex flex-col justify-between h-full">
+
         <!-- TÍTULO -->
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
           {{ pregunta.title }}
         </h3>
       
-        <!-- TOPICS (ahora justo bajo el título) -->
+        <!-- TOPICS -->
         <div class="mt-2 flex flex-wrap gap-2 text-sm text-blue-600 dark:text-blue-400 mb-4">
           {% for topic in pregunta.topics.all %}
             <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
@@ -62,7 +63,7 @@
           </a>
         </div>
       
-        <!-- PIE: publicador -->
+        <!-- Publicado por -->
         <div class="text-sm text-gray-500 dark:text-gray-400 text-right">
           Publicado por <strong>{{ pregunta.user.username }}</strong>
         </div>
@@ -129,7 +130,8 @@
 {% endblock %}
 {% block extra_scripts %}
 <script>
-  // Obtén cualquier cookie por nombre
+   // getCookie para guardar y mostrar visualmente si el usuario ha votado y el que
+  // Función para obtener cookie CSRF
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

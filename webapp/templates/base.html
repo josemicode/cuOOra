@@ -22,10 +22,10 @@
       </form>
 
 
-    <!-- Header limpio y profesional -->
+    <!-- Header -->
     <header class="w-full shadow-md sticky top-0 z-50 bg-white">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- Logo interactivo -->
+            <!-- Logo -->
             <a href="/home/" class="text-3xl font-semibold tracking-tight text-gray-900 hover:text-gray-700 hover:scale-105 transition-transform duration-200 -ml-14">
                 CuOOra
             </a>
@@ -60,10 +60,11 @@
                   </select>
                 {% endif %}
               
-                <!-- resto de tu menú -->
+                <!-- resto del menú -->
                 <a href="/topics/"   class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Topics</a>
                 <a href="/questions/"class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Preguntas</a>
                 {% if user.is_authenticated %}
+                
                 <!-- Menú de usuario -->
                 <div class="relative">
                     <button id="userMenuBtn" class="ml-2 text-sm font-semibold text-gray-600 hover:text-blue-500 transition-custom -mr-4">
@@ -101,11 +102,11 @@
         const userMenu = document.getElementById('userMenu');
     
         userMenuBtn.addEventListener('click', function() {
-            // Toggle visibility of the user menu
+            
             userMenu.classList.toggle('hidden');
         });
     
-        // Close the menu if clicked outside
+        
         window.addEventListener('click', function(event) {
             if (!userMenuBtn.contains(event.target) && !userMenu.contains(event.target)) {
                 userMenu.classList.add('hidden');
@@ -165,7 +166,6 @@
         </div>
     </footer>
     <script src="{% static 'js/questions.js' %}"></script>
-  <!-- Aquí se inyectarán los bloques extra_scripts -->
     {% block extra_scripts %}{% endblock %}
 
 </body>
