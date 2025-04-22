@@ -314,24 +314,39 @@ class TopicRetriever(QuestionRetrievalStrategy):
         q_ret = sorted_q[-min(100, len(sorted_q)):]
         return [q for q in q_ret if q.user != a_user]
 
+from django.utils import timezone
+
 class NewsRetriever(QuestionRetrievalStrategy):
     def retrieve_questions(self, questions, a_user):
-        news_questions = [q for q in questions if q.timestamp.date() == datetime.today().date()]
-        sorted_q = sorted(news_questions, key=lambda q: len(q.positive_votes()))
-        q_ret = sorted_q[-min(100, len(sorted_q)):]
-        return [q for q in q_ret if q.user != a_user]
+        today = timezone.localdate()
+        # Filtramos usando ORM cuando sea posible:
+        if hasattr(questions, 'filter'):
+            qs = questions.filter(timestamp__date=today)
+            return [q for q in qs if q.user != a_user]
+        # Fallback en listas:
+        return [q for q in questions if timezone.localtime(q.timestamp).date() == today and q.user != a_user]
 
 class PopularTodayRetriever(QuestionRetrievalStrategy):
     def retrieve_questions(self, questions, a_user):
-        today_questions = [q for q in questions if q.timestamp.date() == datetime.today().date()]
-        if today_questions:
-            average_votes = sum(len(q.positive_votes()) for q in today_questions) / len(today_questions)
-            popular_questions = [q for q in today_questions if len(q.positive_votes()) > average_votes]
-            sorted_q = sorted(popular_questions, key=lambda q: len(q.positive_votes()))
-            q_ret = sorted_q[-min(100, len(sorted_q)):]
-        else:
-            q_ret = []
-        return [q for q in q_ret if q.user != a_user]
+        today = timezone.localdate()
+        # Si es QuerySet
+        if hasattr(questions, 'annotate'):
+            # Primero, anota los likes
+            qs = questions.filter(timestamp__date=today)
+            # Calcula promedio de likes
+            avg = qs.aggregate(avg_likes=Avg('positive_votes_count'))['avg_likes'] or 0
+            return list(qs.filter(positive_votes_count__gte=avg).order_by('-positive_votes_count', '-timestamp'))
+        # Si es lista pura
+        today_qs = [q for q in questions if timezone.localtime(q.timestamp).date() == today]
+        if not today_qs:
+            return []
+        avg = sum(q.positive_votes().count() for q in today_qs) / len(today_qs)
+        return sorted(
+          [q for q in today_qs if q.positive_votes().count() >= avg and q.user != a_user],
+          key=lambda q: q.positive_votes().count(),
+          reverse=True
+        )
+
 
 class QuestionRetriever: #!
 

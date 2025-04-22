@@ -41,42 +41,52 @@ def socials(request):
     context = {"questions": retrieved_questions}
     return render(request, 'recommended.html', context)
 
+from django.utils import timezone
+from django.db.models import Avg
 
 @login_required(login_url='login')
 def questions_list_view(request):
     recommender = request.GET.get("recommender", "general")
-    
 
-    all_questions = (
+    qs = (
         Question.objects
         .select_related("user")
         .prefetch_related("topics")
         .annotate(
             positive_votes_count=Count(
-                'votes',
-                filter=Q(votes__is_positive_vote=True)
+                'votes', filter=Q(votes__is_positive_vote=True)
             ),
             negative_votes_count=Count(
-                'votes',
-                filter=Q(votes__is_positive_vote=False)
+                'votes', filter=Q(votes__is_positive_vote=False)
             )
         )
     )
 
     if recommender == "social":
-        retriever = QuestionRetriever.create_social()
-        preguntas = retriever.retrieve_questions(all_questions, request.user)
+        preguntas = QuestionRetriever.create_social().retrieve_questions(qs, request.user)
     elif recommender == "topic":
-        retriever = QuestionRetriever.create_topics()
-        preguntas = retriever.retrieve_questions(all_questions, request.user)
-    elif recommender == "news":
-        retriever = QuestionRetriever.create_news()
-        preguntas = retriever.retrieve_questions(all_questions, request.user)
-    elif recommender == "popular":
-        retriever = QuestionRetriever.create_popular_today()
-        preguntas = retriever.retrieve_questions(all_questions, request.user)
+        preguntas = QuestionRetriever.create_topics().retrieve_questions(qs, request.user)
+
     else:
-        preguntas = all_questions.order_by("-timestamp")  # General
+        # Fecha “hoy” según tu zona
+        today = timezone.localdate()
+
+        if recommender == "news":
+            # Últimas preguntas publicadas hoy
+            preguntas = qs.filter(timestamp__date=today).order_by('-timestamp')
+
+        elif recommender == "popular":
+            # Filtramos las de hoy...
+            today_qs = qs.filter(timestamp__date=today)
+            # ...calculamos el promedio de likes de hoy
+            avg = today_qs.aggregate(avg_likes=Avg('positive_votes_count'))['avg_likes'] or 0
+            # incluimos todas las que superen o igualen el promedio
+            preguntas = today_qs.filter(positive_votes_count__gte=avg) \
+                                .order_by('-positive_votes_count', '-timestamp')
+
+        else:
+            # “general” o fallback
+            preguntas = qs.order_by('-timestamp')
 
     return render(request, "questions_list.html", {
         "preguntas": preguntas,
@@ -257,7 +267,7 @@ def home_view(request):
             .annotate(last_question_time=Max('questions__timestamp'))
             .order_by('-last_question_time')
         )
-    elif topic_order == "alfabetico":
+    if topic_order == "alfabetico":
         topics = Topic.objects.order_by('name')
     else:
         topics = (
