@@ -2,11 +2,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Models
-from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer, Vote
+from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer, Vote, QuestionRetriever
 # —> DUPLICADO más abajo (ver nota)
 
 # HTTP y JSON
 from django.http import JsonResponse
+from datetime import date
+
 
 # Autenticación y usuarios
 from django.contrib.auth.decorators import login_required
@@ -31,22 +33,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, Max, Exists, OuterRef
 
 
-def home(request):
-    preguntas = (
-        Question.objects
-        .select_related('user')
-        .prefetch_related('topics')
-        .annotate(
-            positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
-            negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False))
-        )
-        .order_by('-timestamp')[:4] 
-    )
-    topics = Topic.objects.all()[:4]
-    return render(request, 'home.html', {
-        'preguntas': preguntas,
-        'topics':    topics,
-    })
 
 def socials(request):
     user = request.user
@@ -58,7 +44,10 @@ def socials(request):
 
 @login_required(login_url='login')
 def questions_list_view(request):
-    preguntas = (
+    recommender = request.GET.get("recommender", "general")
+    
+
+    all_questions = (
         Question.objects
         .select_related("user")
         .prefetch_related("topics")
@@ -72,9 +61,27 @@ def questions_list_view(request):
                 filter=Q(votes__is_positive_vote=False)
             )
         )
-        .order_by("-timestamp")
     )
-    return render(request, "questions_list.html", {"preguntas": preguntas})
+
+    if recommender == "social":
+        retriever = QuestionRetriever.create_social()
+        preguntas = retriever.retrieve_questions(all_questions, request.user)
+    elif recommender == "topic":
+        retriever = QuestionRetriever.create_topics()
+        preguntas = retriever.retrieve_questions(all_questions, request.user)
+    elif recommender == "news":
+        retriever = QuestionRetriever.create_news()
+        preguntas = retriever.retrieve_questions(all_questions, request.user)
+    elif recommender == "popular":
+        retriever = QuestionRetriever.create_popular_today()
+        preguntas = retriever.retrieve_questions(all_questions, request.user)
+    else:
+        preguntas = all_questions.order_by("-timestamp")  # General
+
+    return render(request, "questions_list.html", {
+        "preguntas": preguntas,
+        "active_recommender": recommender
+    })
 
 
 @api_view(['GET'])
@@ -108,9 +115,23 @@ def pregunta_detalle_api(request, id):
 
 @login_required(login_url='login')
 def topics(request):
-    topics = Topic.objects.all()
-    return render(request, "topics.html", {"topics": topics})
+    topic_order = request.GET.get('topic_order', 'popular')
 
+    if topic_order == 'recientes':
+        qs = Topic.objects.order_by('-id')
+    elif topic_order == 'alfabetico':
+        qs = Topic.objects.order_by('name')
+    else:  # popular o por defecto
+        qs = Topic.objects.annotate(
+            num_questions=Count('questions')
+        ).order_by('-num_questions')
+
+    topics = qs
+    return render(request, "topics.html", {
+        "topics": topics,
+        "active_topic_order": topic_order,
+    })
+ 
 @login_required(login_url='login')
 def responder_pregunta(request, pk):
     question = get_object_or_404(Question, pk=pk)
@@ -350,39 +371,43 @@ def vote_respuesta_api(request, id):
         'negative_votes': negative,
     })
     
-    
-@login_required
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Count, Q, Exists, OuterRef
+from users.models import Answer, Vote
+
+@login_required(login_url='login')
 def answers_list_view(request):
-    user = request.user
+    # 1. Averiguamos el ContentType de Answer
     ct = ContentType.objects.get_for_model(Answer)
 
+    # 2. Preparamos dos subqueries para Exists()
     likes_qs = Vote.objects.filter(
-        user=user,
+        user=request.user,
         specific_subclass=ct,
         object_id=OuterRef('pk'),
         is_positive_vote=True
     )
     dislikes_qs = Vote.objects.filter(
-        user=user,
+        user=request.user,
         specific_subclass=ct,
         object_id=OuterRef('pk'),
         is_positive_vote=False
     )
 
+    # 3. Annotate sobre Answer
     answers = (
         Answer.objects
-        .select_related('user', 'question')
         .annotate(
             positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
             negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False)),
             user_liked=Exists(likes_qs),
             user_disliked=Exists(dislikes_qs),
         )
-        .order_by('-positive_votes_count', '-question__timestamp')  # primero las más votadas
+        .order_by('-timestamp')
     )
 
     return render(request, 'answers_list.html', {
-        'answers': answers,
-        'active_tab': 'answers',
+        'answers': answers
     })
-    

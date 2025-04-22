@@ -4,9 +4,24 @@
 
 {% block content %}
 <main class="p-6">
-  <h2 class="text-xl text-gray-200 font-semibold mb-6">
-    Preguntas publicadas: {{ preguntas|length }}
-  </h2>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Preguntas publicadas</h2>
+    <form method="get" id="recommenderForm" class="flex space-x-2">
+      <label for="recommenderSelect" class="sr-only">Seleccionar modo:</label>
+      <select 
+        name="recommender" 
+        id="recommenderSelect"
+        class="border rounded px-2 py-1 text-gray-700 dark:text-dark-200"
+        onchange="this.form.submit()"
+      >
+        <option value="general" {% if active_recommender == 'general' %}selected{% endif %}>Todo</option>
+        <option value="social"  {% if active_recommender == 'social'  %}selected{% endif %}>Social</option>
+        <option value="topic"   {% if active_recommender == 'topic'   %}selected{% endif %}>Por topics</option>
+        <option value="news"    {% if active_recommender == 'news'    %}selected{% endif %}>Recientes</option>
+        <option value="popular" {% if active_recommender == 'popular' %}selected{% endif %}>Populares hoy</option>
+      </select>
+    </form>
+  </div>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
     {% for pregunta in preguntas %}
@@ -269,5 +284,8 @@
       }
     });
   });
+
+  
+
 </script>
 {% endblock %}

@@ -13,6 +13,7 @@ urlpatterns = [
     path('socials/', socials, name='socials'),
     path("questions/", questions_list_view, name = "questions_list"),
     path("topics/", topics, name = "topics"),
+    path('api/topic/<int:id>/', topic_detail, name='topic_api'),
     path('api/pregunta/<int:id>/', pregunta_detalle_api, name='pregunta_api'),
     path('pregunta/<int:pk>/responder/', responder_pregunta, name='responder_pregunta'),
     path("logout/", CustomLogoutView.as_view(next_page='home'), name="logout"),

@@ -1,22 +1,121 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Topics{% endblock %}
 
 {% block content %}
 <main class="p-6">
-    <h2 class="text-xl text-gray-200 font-semibold mb-6">Topics disponibles</h2>
-    <div class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Topics disponibles: {{ topics|length }}</h2>
+    <form method="get" id="topicFilterForm" class="flex space-x-2">
+      <label for="topicSelect" class="sr-only">Seleccionar orden:</label>
+      <select
+        name="topic_order"
+        id="topicSelect"
+        class="border rounded px-2 py-1 text-gray-700 dark:text-dark-200"
+        onchange="this.form.submit()"
+      >
+        <option value="popular"   {% if active_topic_order == 'popular'   %}selected{% endif %}>Más populares</option>
+        <option value="recientes" {% if active_topic_order == 'recientes' %}selected{% endif %}>Más recientes</option>
+        <option value="alfabetico"{% if active_topic_order == 'alfabetico'%}selected{% endif %}>A‑Z</option>
+      </select>
+    </form>
+  </div>
 
-        {% for topic in topics %}
-        <div class="max-w-sm w-full bg-white dark:bg-[#34495e] rounded-lg shadow-lg overflow-hidden hover:scale-105 transform transition-all duration-300">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ topic.name }}</h3>
-                <p class="mt-2 text-gray-600 dark:text-gray-400">{{ topic.description|truncatewords:20 }}</p>
-            </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {% for topic in topics %}
+      <div
+        class="topic-card max-w-sm w-full bg-white dark:bg-[#34495e]
+               rounded-lg shadow-lg overflow-hidden hover:scale-105
+               transform transition-all duration-300 cursor-pointer"
+        data-id="{{ topic.id }}"
+      >
+        <div class="p-6 flex flex-col justify-between h-full">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            {{ topic.name }}
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 flex-grow mb-4">
+            {{ topic.description|truncatewords:20 }}
+          </p>
+          <div class="text-sm text-gray-500 dark:text-gray-400 text-right">
+            {{ topic.questions.count }} pregunta{{ topic.questions.count|pluralize }}
+          </div>
         </div>
-        {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
+  </div>
 
-    
+  <!-- Modal de Topic -->
+  <div id="modal-topic"
+       class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center
+              items-center hidden transition-opacity duration-300 ease-out"
+  >
+    <div id="modal-topic-content"
+         class="relative opacity-0 translate-y-4 transform backdrop-blur-md
+                bg-white/30 dark:bg-white/10 border border-white/20
+                dark:border-white/10 text-gray-900 dark:text-white
+                rounded-2xl w-full max-w-3xl p-6 shadow-2xl
+                transition-all duration-300 ease-out"
+    >
+      <button onclick="closeTopicModal()"
+              class="absolute top-4 right-6 text-gray-600 dark:text-gray-300
+                     hover:text-red-500 transition p-1 rounded-full
+                     hover:bg-white/20 focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <h3 id="modal-topic-title" class="text-2xl font-semibold mb-4"></h3>
+      <p id="modal-topic-description" class="text-gray-300 dark:text-gray-300 mb-4"></p>
+      <div id="modal-topic-count" class="text-sm text-gray-300 dark:text-gray-300 mb-4"></div>
+    </div>
+  </div>
 </main>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Abre el modal del topic
+    function openTopicModal(id) {
+      fetch(`/api/topic/${id}/`)
+        .then(res => res.json())
+        .then(data => {
+          // Rellenamos contenido
+          document.getElementById('modal-topic-title').textContent = data.name;
+          document.getElementById('modal-topic-description').textContent = data.description;
+          document.getElementById('modal-topic-count').textContent =
+            `${data.num_preguntas} pregunta${data.num_preguntas !== 1 ? 's' : ''}`;
+  
+          // Mostramos modal y animamos
+          const modal = document.getElementById('modal-topic');
+          const content = document.getElementById('modal-topic-content');
+          modal.classList.remove('hidden');
+          setTimeout(() => {
+            content.classList.remove('opacity-0', 'translate-y-4');
+            content.classList.add('opacity-100', 'translate-y-0');
+          }, 10);
+        })
+        .catch(err => console.error('Error al cargar topic:', err));
+    }
+  
+    // Cierra el modal del topic
+    function closeTopicModal() {
+      const modal = document.getElementById('modal-topic');
+      const content = document.getElementById('modal-topic-content');
+      content.classList.remove('opacity-100', 'translate-y-0');
+      content.classList.add('opacity-0', 'translate-y-4');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+  
+    // Asocia el evento al hacer click en cada tarjeta
+    document.querySelectorAll('.topic-card').forEach(card => {
+      card.addEventListener('click', () => {
+        openTopicModal(card.dataset.id);
+      });
+    });
+  </script>
+
+  {% endblock %}
