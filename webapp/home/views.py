@@ -34,12 +34,6 @@ from django.db.models import Count, Q, Max, Exists, OuterRef
 
 
 
-def socials(request):
-    user = request.user
-    questions = Question.objects.all()
-    retrieved_questions = SocialRetriever().retrieve_questions(questions, user)
-    context = {"questions": retrieved_questions}
-    return render(request, 'recommended.html', context)
 
 from django.utils import timezone
 from django.db.models import Avg
@@ -216,6 +210,8 @@ class CustomLoginView(LoginView):
     redirect_authenticated_user = True
     success_url = reverse_lazy('home')
     
+    
+    
 def test_login(request):
     if request.method == "POST":
         username = request.POST.get('username')
@@ -226,6 +222,8 @@ def test_login(request):
         else:
             return render(request, 'error.html', {'error': 'Usuario o contraseña incorrectos'})
     return render(request, 'login_test.html')
+
+
 
 
 
