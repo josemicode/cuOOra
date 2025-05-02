@@ -44,6 +44,6 @@ def analyze_text(self, model_name, instance_id):
         #* En caso de fallo, reintentar mas tarde (3 reintentos)
         raise self.retry(countdown=60, max_retries=3)
 
-#TODO: Actualizar modelos -> campo apto
+#// TODO Actualizar modelos -> campo apto
 #TODO: Crear vistas que ejecuten la tarea...
 #TODO: Filtros de queries en los modelos (visibilidad)

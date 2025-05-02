@@ -124,14 +124,8 @@ class Answer(Votable):
     #* votes is referenced
     question = models.ForeignKey("Question", on_delete=models.CASCADE, related_name="answers")
 
-    """ def _filter_votes(self, positive):
-        return [vote for vote in self.votes if vote.is_like() == positive]
-
-    def positive_votes(self):
-        return self._filter_votes(True)
-    
-    def negative_votes(self):
-        return self._filter_votes(False) """
+    #* check -> API
+    apto = models.BooleanField(null=True, default=None)
 
     def get_question(self):
         return self.question
@@ -144,17 +138,6 @@ class Answer(Votable):
 
     def get_description(self):
         return self.description
-	
-    """ def get_timestamp(self):
-        return self.timestamp """
-
-    """ def add_vote(self, a_vote):
-        if any(vote.user == a_vote.user for vote in self.votes):
-            raise ValueError("Este usuario ya ha votado")
-        self.votes.append(a_vote) 
-
-    def get_votes(self):
-        return self.votes """
     
     def __str__(self):
         return f"In response to <<{self.question.get_title()}>> by {self.user.get_username()}"
@@ -194,20 +177,14 @@ class Question(Votable):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="questions")
     topics = models.ManyToManyField(Topic, related_name="questions")
 
+    #* check -> API
+    apto = models.BooleanField(null=True, default=None)
+
     def set_description(self, description):
         self.description = description
 
     def get_description(self):
         return self.description
-
-    """ def _filter_votes(self, positive: bool):
-        return [vote for vote in self.votes.all() if vote.is_like() == positive]
-
-    def positive_votes(self):
-        return self._filter_votes(True)
-    
-    def negative_votes(self):
-        return self._filter_votes(False) """
 
     def get_topics(self):
         return self.topics.all()
@@ -220,24 +197,6 @@ class Question(Votable):
 
     def get_user(self):
         return self.user
-
-    """ def get_timestamp(self):
-        return self.timestamp """
-
-    """ def get_votes(self):
-        return self.votes
-
-    def add_vote(self, a_vote):
-        if any(vote.user == a_vote.user for vote in self.votes): 
-            raise ValueError("Este usuario ya ha votado")
-        self.votes.append(a_vote) """
-    '''
-    def add_topic(self, a_topic):
-        if a_topic in self.topics:
-            raise ValueError("El topico ya esta agregado.")
-        self.topics.append(a_topic)
-        a_topic.add_question(self)
-    '''
     
     def add_topic(self, a_topic):
         if self.topics.filter(pk=a_topic.pk).exists():
