@@ -140,3 +140,14 @@ LOGIN_REDIRECT_URL = '/home/'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # Esto es necesario para la autenticación predeterminada de Django
 )
+
+# Redis: config
+CELERY_BROKER_URL = config('REDIS_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Europe/Madrid'
+
+# Auto-descubrimiento de tareas
+CELERY_IMPORTS = ['webapp.tasks']
