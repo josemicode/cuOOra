@@ -14,7 +14,7 @@ services:
              python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - db
-    #  - redis
+      - redis
     env_file: ".env_local"
 
   db:
@@ -22,32 +22,32 @@ services:
     container_name: webapp-postgresql
     env_file: ".env_local"
 
-  #celery-worker:
-  #  build:
-  #    context: .
-  #  container_name: celery-worker-webapp
-  #  command: celery -A app worker --loglevel=DEBUG
-  #  volumes:
-  #    - ./webapp:/home/app
-  #  depends_on:
-  #    - app
-  #    - redis
-  #    - db
-  #  env_file: ".env_local"
+  redis:
+    image: redis:alpine
+    container_name: redis-webapp
 
-  #celery-beat:
-  #  build:
-  #    context: .
-  #  container_name: celery-beat-webapp
-  #  command: celery -A api beat --loglevel=DEBUG
-  #  volumes:
-  #    - ./webapp:/home/app
-  #  depends_on:
-  #    - app
-  #    - redis
-  #    - db
-  #  env_file: ".env_local"
+  celery-worker:
+    build:
+      context: .
+    container_name: celery-worker-webapp
+    command: celery -A app worker --loglevel=DEBUG
+    volumes:
+      - ./webapp:/home/app
+    depends_on:
+      - app
+      - redis
+      - db
+    env_file: ".env_local"
 
-  #redis:
-  #  image: redis:alpine
-  #  container_name: redis-webapp
+  celery-beat:
+    build:
+      context: .
+    container_name: celery-beat-webapp
+    command: celery -A api beat --loglevel=DEBUG
+    volumes:
+      - ./webapp:/home/app
+    depends_on:
+      - app
+      - redis
+      - db
+    env_file: ".env_local"
