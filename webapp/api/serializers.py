@@ -1,9 +1,15 @@
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
-from todomanager.models import Board
+from user.models import Question, Answer
 
-class BoardSerializer(serializers.HyperlinkedModelSerializer):
+# class BoardSerializer(serializers.HyperlinkedModelSerializer):
+#     permission_classes = [AllowAny]
+#     class Meta:
+#         model = Board
+#         fields = ['id', 'title']
+
+class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     permission_classes = [AllowAny]
     class Meta:
-        model = Board
-        fields = ['id', 'title']
+        model = Question
+        fields = ['id', 'title', 'description']

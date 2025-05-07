@@ -3,6 +3,16 @@ from celery import shared_task
 from django.conf import settings
 from .models import Question, Answer
 
+# @shared_task(bind=True)
+# def create_reminders(self):
+#     print("Creating reminders...")
+#     toDos = ToDoItem.objects.filter(completed=False)
+    
+@shared_task(bind=True)
+def send_notifications(self, question_id):
+    print("Wait...")
+    print("Id: ", question_id)
+
 @shared_task(bind=True)
 def analyze_text(self, model_name, instance_id):
     """
@@ -47,3 +57,10 @@ def analyze_text(self, model_name, instance_id):
 #// TODO Actualizar modelos -> campo apto
 #TODO: Crear vistas que ejecuten la tarea...
 #TODO: Filtros de queries en los modelos (visibilidad)
+
+"""
+!Importante
+Por ahora, este archivo no tiene un uso como tal.
+Mi idea era usarlo complementariamente con las signals,
+pero eso queda a futuro...
+"""
