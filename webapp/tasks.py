@@ -1,7 +1,7 @@
 import requests
 from celery import shared_task
 from django.conf import settings
-from .models import Question, Answer
+from users.models import Question, Answer
 
 # @shared_task(bind=True)
 # def create_reminders(self):
@@ -9,9 +9,9 @@ from .models import Question, Answer
 #     toDos = ToDoItem.objects.filter(completed=False)
     
 @shared_task(bind=True)
-def send_notifications(self, question_id):
+def send_notifications(self, instance_id):
     print("Wait...")
-    print("Id: ", question_id)
+    print("Id: ", instance_id)
 
 @shared_task(bind=True)
 def analyze_text(self, model_name, instance_id):

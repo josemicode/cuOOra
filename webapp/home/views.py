@@ -32,7 +32,8 @@ from django.contrib.contenttypes.models import ContentType
 # Modelos de Django (ORM)
 from django.db.models import Count, Q, Max, Exists, OuterRef
 
-
+# Tareas (Celery)
+from tasks import analyze_text, send_notifications
 
 
 from django.utils import timezone
@@ -142,11 +143,16 @@ def responder_pregunta(request, pk):
     if request.method == 'POST':
         contenido = request.POST.get('description')
         if contenido:
-            Answer.objects.create(
+            answer = Answer.objects.create(
                 user=request.user,
                 question=question,
                 description=contenido
             )
+
+            #analyze_text.delay('answer', answer.id)
+            send_notifications.delay(1)
+            print("?")
+
             return redirect('responder_pregunta', pk=question.pk)
 
     ct = ContentType.objects.get_for_model(Answer)

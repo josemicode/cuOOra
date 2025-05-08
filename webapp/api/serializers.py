@@ -13,3 +13,9 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Question
         fields = ['id', 'title', 'description']
+
+class AnswerSerializer(serializers.HyperlinkedModelSerializer):
+    permission_classes = [AllowAny]
+    class Meta:
+        model = Answer
+        fields = ['id', 'description']

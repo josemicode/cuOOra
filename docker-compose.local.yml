@@ -30,6 +30,7 @@ services:
     build:
       context: .
     container_name: celery-worker-webapp
+    working_dir: /home/app
     command: celery -A app worker --loglevel=DEBUG
     volumes:
       - ./webapp:/home/app
@@ -43,7 +44,8 @@ services:
     build:
       context: .
     container_name: celery-beat-webapp
-    command: celery -A api beat --loglevel=DEBUG
+    working_dir: /home/app
+    command: celery -A app beat --loglevel=DEBUG
     volumes:
       - ./webapp:/home/app
     depends_on:
