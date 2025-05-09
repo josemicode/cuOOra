@@ -150,4 +150,4 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Madrid'
 
 # Auto-descubrimiento de tareas
-CELERY_IMPORTS = ['webapp.tasks']
+CELERY_IMPORTS = ['tasks']

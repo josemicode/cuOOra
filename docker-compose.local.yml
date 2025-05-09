@@ -39,6 +39,8 @@ services:
       - redis
       - db
     env_file: ".env_local"
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
 
   celery-beat:
     build:
@@ -53,3 +55,5 @@ services:
       - redis
       - db
     env_file: ".env_local"
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
