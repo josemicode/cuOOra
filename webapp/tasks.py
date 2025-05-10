@@ -36,14 +36,28 @@ def analyze_text(self, model_name, instance_id):
 
     #* Obtener token de auth (autorizar)
     auth = {"username": settings.ANALYZER_USER, "password": settings.ANALYZER_PASS}
-    token_resp = requests.post(f"{settings.ANALYZER_BASE}/auth/token/", json=auth)
+    token_resp = requests.post(
+        f"{settings.ANALYZER_BASE}/api/auth/token/",
+        json=auth,
+        headers={"accept": "application/json", "Content-Type": "application/json"},
+    )
+    
     token = token_resp.json().get('access')
 
-    headers = {"Authorization": f"Bearer {token}", "accept": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "accept": "application/json",
+    }
+
     payload = {"texts_list": texts}
 
     #* Llamada al endpoint (metodo GET del API para analizar)
-    resp = requests.post(f"{settings.ANALYZER_BASE}/analyzer/analysis/", json=payload, headers=headers)
+    resp = requests.post(
+        f"{settings.ANALYZER_BASE}/api/analyzer/analysis/",
+        json=payload,
+        headers=headers
+    )
+
     if resp.status_code == 201:
         result = resp.json()
         #? Asumimos result estilo [{"id":"title","allowed":true}, ...], posible tener que modificar
