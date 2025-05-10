@@ -36,14 +36,14 @@ def analyze_text(self, model_name, instance_id):
 
     #* Obtener token de auth (autorizar)
     auth = {"username": settings.ANALYZER_USER, "password": settings.ANALYZER_PASS}
-    token_resp = requests.post(f"{settings.ANALYZER_BASE}/api/auth/token/", json=auth)
+    token_resp = requests.post(f"{settings.ANALYZER_BASE}/auth/token/", json=auth)
     token = token_resp.json().get('access')
 
     headers = {"Authorization": f"Bearer {token}", "accept": "application/json"}
     payload = {"texts_list": texts}
 
     #* Llamada al endpoint (metodo GET del API para analizar)
-    resp = requests.post(f"{settings.ANALYZER_BASE}/api/analyzer/analysis/", json=payload, headers=headers)
+    resp = requests.post(f"{settings.ANALYZER_BASE}/analyzer/analysis/", json=payload, headers=headers)
     if resp.status_code == 201:
         result = resp.json()
         #? Asumimos result estilo [{"id":"title","allowed":true}, ...], posible tener que modificar
@@ -57,10 +57,3 @@ def analyze_text(self, model_name, instance_id):
 #// TODO Actualizar modelos -> campo apto
 #TODO: Crear vistas que ejecuten la tarea...
 #TODO: Filtros de queries en los modelos (visibilidad)
-
-"""
-!Importante
-Por ahora, este archivo no tiene un uso como tal.
-Mi idea era usarlo complementariamente con las signals,
-pero eso queda a futuro...
-"""

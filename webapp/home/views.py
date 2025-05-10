@@ -149,8 +149,8 @@ def responder_pregunta(request, pk):
                 description=contenido
             )
 
-            #analyze_text.delay('answer', answer.id)
             send_notifications.delay(answer.id)
+            analyze_text.delay('answer', answer.id)
             print("?")
 
             return redirect('responder_pregunta', pk=question.pk)

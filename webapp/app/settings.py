@@ -151,3 +151,8 @@ CELERY_TIMEZONE = 'Europe/Madrid'
 
 # Auto-descubrimiento de tareas
 CELERY_IMPORTS = ['tasks']
+
+# Conexión Honduras
+ANALYZER_BASE = config('ANALYZER_BASE')
+ANALYZER_USER = config('ANALYZER_USER')
+ANALYZER_PASS = config('ANALYZER_PASS')
