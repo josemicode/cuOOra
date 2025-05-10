@@ -41,6 +41,8 @@ services:
     env_file: ".env_local"
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   celery-beat:
     build:
@@ -57,3 +59,5 @@ services:
     env_file: ".env_local"
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
