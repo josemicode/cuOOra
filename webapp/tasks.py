@@ -53,16 +53,29 @@ def analyze_text(self, model_name, instance_id):
 
     #* Llamada al endpoint (metodo GET del API para analizar)
     resp = requests.post(
-        f"{settings.ANALYZER_BASE}/api/analyzer/analysis/",
-        json=payload,
-        headers=headers
-    )
+            f"{settings.ANALYZER_BASE}/api/analyzer/analysis/",
+            json=payload,
+            headers=headers
+            )
 
-    if resp.status_code == 201:
+    """ if resp.status_code == 201:
         result = resp.json()
         #? Asumimos result estilo [{"id":"title","allowed":true}, ...], posible tener que modificar
         allowed = all(item.get('allowed', False) for item in result)
         instance.apto = allowed
+        instance.save(update_fields=['apto']) """
+    if resp.status_code == 201:
+        data = resp.json()
+        # El array de resultados viene bajo 'retrieved_result'
+        results_list = data.get('retrieved_result') or []
+        # Si la API ya devuelve un campo booleano final_result, úsalo:
+        final = data.get('final_result')
+        if final is not None:
+            instance.apto = final
+        else:
+            # o bien dedúcelo tú mismo, p.ej. aquí marcamos apto
+            # sólo si ninguno de los items trae un flag 'allowed': false
+            instance.apto = all(item.get('allowed', True) for item in results_list)
         instance.save(update_fields=['apto'])
     else:
         #* En caso de fallo, reintentar mas tarde (3 reintentos)
