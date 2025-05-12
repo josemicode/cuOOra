@@ -171,6 +171,8 @@ def responder_pregunta(request, pk):
         is_positive_vote=False
     )
 
+    #! Filtrar por apto
+
     respuestas = (
         Answer.objects
         .filter(question=question)
