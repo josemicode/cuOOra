@@ -427,3 +427,28 @@ def answers_list_view(request):
     return render(request, 'answers_list.html', {
         'answers': answers
     })
+
+
+@login_required
+def crear_pregunta(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        topics_ids = request.POST.getlist('topics')
+
+        if not title or not description:
+            messages.error(request, "Título y descripción son obligatorios.")
+        else:
+            pregunta = Question.objects.create(
+                title=title,
+                description=description,
+                user=request.user
+            )
+            pregunta.topics.set(topics_ids)
+            return redirect('questions_list')
+
+    all_topics = Topic.objects.all()
+    return render(request, 'crear_pregunta.html', {
+        'topics': all_topics
+    })
+    

@@ -4,9 +4,19 @@
 
 {% block content %}
 <main class="p-6">
-  <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Preguntas publicadas</h2>
-    <form method="get" id="recommenderForm" class="flex space-x-2">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
+    Preguntas publicadas
+  </h2>
+  
+  <input
+  type="text"
+  id="searchInput"
+  placeholder="Buscar preguntas..."
+  class="w-full sm:w-96 border border-gray-300 rounded px-4 py-2 text-sm text-gray-900 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  <div class="flex flex-wrap gap-2">
+    <form method="get" id="recommenderForm">
       <label for="recommenderSelect" class="sr-only">Seleccionar modo:</label>
       <select 
         name="recommender" 
@@ -21,7 +31,11 @@
         <option value="popular" {% if active_recommender == 'popular' %}selected{% endif %}>Populares hoy</option>
       </select>
     </form>
+
+    
   </div>
+</div>
+
 
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
     {% for pregunta in preguntas %}
@@ -286,6 +300,24 @@
   });
 
   
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+
+    searchInput.addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      const cards = document.querySelectorAll('.question-card');
+
+      cards.forEach(card => {
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const description = card.querySelector('p').textContent.toLowerCase();
+
+        const matches = title.includes(query) || description.includes(query);
+        card.style.display = matches ? '' : 'none';
+      });
+    });
+  });
+
 
 </script>
 {% endblock %}

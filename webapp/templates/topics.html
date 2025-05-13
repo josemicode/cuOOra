@@ -4,9 +4,17 @@
 {% block title %}Topics{% endblock %}
 
 {% block content %}
-<main class="p-6">
+<main class="max-w-7xl mx-auto p-6">
+  
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Topics disponibles: {{ topics|length }}</h2>
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Buscar..."
+    class="border rounded px-3 py-1 text-sm text-gray-700 dark:text-white dark:bg-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
+  />
+
     <form method="get" id="topicFilterForm" class="flex space-x-2">
       <label for="topicSelect" class="sr-only">Seleccionar orden:</label>
       <select
@@ -116,6 +124,29 @@
         openTopicModal(card.dataset.id);
       });
     });
+    
+
+
+   
+  document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("topicSearchInput");
+    const cards = document.querySelectorAll(".topic-card");
+
+    input.addEventListener("input", () => {
+      const search = input.value.toLowerCase();
+
+      cards.forEach(card => {
+        const name = card.querySelector("h3").textContent.toLowerCase();
+        const desc = card.querySelector("p").textContent.toLowerCase();
+
+        const visible = name.includes(search) || desc.includes(search);
+        card.classList.toggle("hidden", !visible);
+      });
+    });
+  });
+
+
+
   </script>
 
   {% endblock %}

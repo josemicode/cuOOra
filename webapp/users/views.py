@@ -1,6 +1,8 @@
 from django.shortcuts import render
 import random
 from .models import User, Notification
+from django.contrib.auth.decorators import login_required
+
 
 
 def users_view(request):

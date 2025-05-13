@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Crear Pregunta{% endblock %}
+
+{% block content %}
+<main class="max-w-3xl mx-auto p-6">
+  <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Crear nueva pregunta</h2>
+  
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label for="title" class="block text-gray-700 dark:text-gray-200">Título</label>
+      <input type="text" name="title" id="title" required class="w-full p-2 rounded border">
+    </div>
+
+    <div>
+      <label for="description" class="block text-gray-700 dark:text-gray-200">Descripción</label>
+      <textarea name="description" id="description" rows="5" required class="w-full p-2 rounded border"></textarea>
+    </div>
+
+    <div>
+      <label for="topics" class="block text-gray-700 dark:text-gray-200">Temas</label>
+      <select name="topics" id="topics" multiple class="w-full p-2 rounded border">
+        {% for topic in topics %}
+          <option value="{{ topic.id }}">{{ topic.name }}</option>
+        {% endfor %}
+      </select>
+      <small class="text-gray-500">Mantén pulsado Ctrl (o Cmd) para seleccionar varios</small>
+    </div>
+
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+      Publicar
+    </button>
+  </form>
+</main>
+{% endblock %}
