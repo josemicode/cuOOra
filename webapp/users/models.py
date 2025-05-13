@@ -325,34 +325,12 @@ class QuestionRetriever: #!
     def create_popular_today(cls):
         return PopularTodayRetriever()
 
-#? How to test...
-# class CuOOra:
-#     def __init__(self):
-#         self.questions = []
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    #? BooleanField -> read?
 
-#     def add_question(self, question):
-#         self.questions.append(question)
-
-#     def get_questions_by_type(self, type_, user):
-#         retriever_methods = {
-#             "social": QuestionRetriever.create_social,
-#             "topic": QuestionRetriever.create_topics,
-#             "news": QuestionRetriever.create_news,
-#             "popular": QuestionRetriever.create_popular_today,
-#         }
-#         if type_ not in retriever_methods:
-#             raise ValueError("Tipo de pregunta no válido")
-#         retriever = retriever_methods[type_]()
-#         return retriever.retrieve_questions(self.questions, user)
-
-#     def get_social_questions_for_user(self, user):
-#         return self.get_questions_by_type("social", user)
-
-#     def get_topic_questions_for_user(self, user):
-#         return self.get_questions_by_type("topic", user)
-
-#     def get_news_questions_for_user(self, user):
-#         return self.get_questions_by_type("news", user)
-
-#     def get_popular_questions_for_user(self, user):
-#         return self.get_questions_by_type("popular", user)
+    #? timestamp.strftime('%Y-%m-%d %H:%M')
+    def __str__(self):
+        return f"{self.description}"
