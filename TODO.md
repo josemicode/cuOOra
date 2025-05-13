@@ -1,1 +1,2 @@
-Create simple view for notifications
+Create simple view for notifications []
+Search bar (coincidences) []
