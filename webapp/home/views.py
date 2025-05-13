@@ -175,7 +175,7 @@ def responder_pregunta(request, pk):
 
     respuestas = (
         Answer.objects
-        .filter(question=question)
+        .filter(question=question, apto=True)
         .annotate(
             positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
             negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False)),
