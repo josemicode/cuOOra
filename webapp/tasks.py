@@ -1,13 +1,13 @@
 import requests
 from celery import shared_task
 from django.conf import settings
-from users.models import Question, Answer
+from users.models import Question, Answer, Notification
 
 # @shared_task(bind=True)
 # def create_reminders(self):
 #     print("Creating reminders...")
 #     toDos = ToDoItem.objects.filter(completed=False)
-    
+
 @shared_task(bind=True)
 def send_notifications(self, instance_id):
     print("Wait...")
@@ -28,26 +28,26 @@ def analyze_text(self, model_name, instance_id):
     texts = []
     if model_name == 'question':
         texts = [
-            {"id": "title", "text": instance.title},
-            {"id": "descripcion", "text": instance.description}
-        ]
+                {"id": "title", "text": instance.title},
+                {"id": "descripcion", "text": instance.description}
+                ]
     else:
         texts = [{"id": "description", "text": instance.description}]
 
     #* Obtener token de auth (autorizar)
     auth = {"username": settings.ANALYZER_USER, "password": settings.ANALYZER_PASS}
     token_resp = requests.post(
-        f"{settings.ANALYZER_BASE}/api/auth/token/",
-        json=auth,
-        headers={"accept": "application/json", "Content-Type": "application/json"},
-    )
-    
+            f"{settings.ANALYZER_BASE}/api/auth/token/",
+            json=auth,
+            headers={"accept": "application/json", "Content-Type": "application/json"},
+            )
+
     token = token_resp.json().get('access')
 
     headers = {
-        "Authorization": f"Bearer {token}",
-        "accept": "application/json",
-    }
+            "Authorization": f"Bearer {token}",
+            "accept": "application/json",
+            }
 
     payload = {"texts_list": texts}
 
@@ -66,14 +66,26 @@ def analyze_text(self, model_name, instance_id):
         if final is not None:
             instance.apto = final
         else:
-            # Si no, marcamos apto = True sólo cuando ninguna parte del text contenga palabrotas. Cada item en retrieved_result tiene: item['palabrotas']['contains'] == True|False
+            # Si no, marcamos apto = True solo cuando ninguna parte del text contenga palabrotas. Cada item en retrieved_result tiene: item['palabrotas']['contains'] == True|False
             contains_any_swear = any(
-                entry.get('palabrotas', {}).get('contains', False)
-                for entry in results_list
-            )
+                    entry.get('palabrotas', {}).get('contains', False)
+                    for entry in results_list
+                    )
             # Si encontramos palabrostia, apto = False; en caso contrario, True
             instance.apto = not contains_any_swear
         instance.save(update_fields=['apto'])
+
+        # Mandar notificationss
+        user = instance.user
+        message = f"Tu última {model_name} fue marcada como {'válida' if instance.apto else 'inapropiada'}"
+
+        # if instance.apto:
+        #     print("BUENA")  
+        # else:
+        #     print("MALA")
+
+        Notification.objects.create(user=user, description=message)
+
     else:
         #* En caso de fallo, reintentar mas tarde (3 reintentos)
         raise self.retry(countdown=60, max_retries=3)
