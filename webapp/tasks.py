@@ -79,5 +79,6 @@ def analyze_text(self, model_name, instance_id):
         raise self.retry(countdown=60, max_retries=3)
 
 #// TODO Actualizar modelos -> campo apto
-#TODO: Crear vistas que ejecuten la tarea...
-#TODO: Filtros de queries en los modelos (visibilidad)
+#//TOD0: Crear vistas que ejecuten la tarea...
+#//TOD0: Filtros de queries en los modelos (visibilidad)
+#TODO: give context somewhere, the Obj.objects.create
