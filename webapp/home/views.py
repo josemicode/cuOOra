@@ -3,7 +3,7 @@ from http.cookiejar import MozillaCookieJar
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Models
-from users.models import Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer, Vote, QuestionRetriever
+from users.models import Notification, Question, SocialRetriever, PopularTodayRetriever, TopicRetriever, NewsRetriever, Topic, Answer, Vote, QuestionRetriever
 # —> DUPLICADO más abajo (ver nota)
 
 # HTTP y JSON
@@ -157,6 +157,13 @@ def responder_pregunta(request, pk):
             # send_notifications.delay(answer.id)
             analyze_text.delay('answer', answer.id)
             # print("?")
+
+            #* Notify user
+            message = f"{request.user.username} has answered one of your questions"
+            Notification.objects.create(
+                user=question.user,
+                description=message
+            )
 
             return redirect('responder_pregunta', pk=question.pk)
 
@@ -347,6 +354,13 @@ def vote_pregunta_api(request, id):
                 is_positive_vote=(vote_type == 'like')
             )
 
+            #* Notify user
+            message = f"{request.user.username} has voted one of your questions"
+            Notification.objects.create(
+                user=question.user,
+                description=message
+            )
+
    
     positive = question.votes.filter(is_positive_vote=True).count()
     negative = question.votes.filter(is_positive_vote=False).count()
@@ -385,6 +399,13 @@ def vote_respuesta_api(request, id):
             specific_subclass=ct,
             object_id=answer.id,
             is_positive_vote=(vote_type == 'like')
+        )
+
+        #* Notify user
+        message = f"{request.user.username} has voted one of your answers"
+        Notification.objects.create(
+            user=answer.user,
+            description=message
         )
 
     positive = answer.votes.filter(is_positive_vote=True).count()
