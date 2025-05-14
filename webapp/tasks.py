@@ -29,7 +29,7 @@ def analyze_text(self, model_name, instance_id):
     if model_name == 'question':
         texts = [
                 {"id": "title", "text": instance.title},
-                {"id": "descripcion", "text": instance.description}
+                {"id": "description", "text": instance.description}
                 ]
     else:
         texts = [{"id": "description", "text": instance.description}]

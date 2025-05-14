@@ -1,4 +1,5 @@
 # Django shortcuts
+from http.cookiejar import MozillaCookieJar
 from django.shortcuts import render, get_object_or_404, redirect
 
 # Models
@@ -54,6 +55,9 @@ def questions_list_view(request):
             negative_votes_count=Count(
                 'votes', filter=Q(votes__is_positive_vote=False)
             )
+        )
+        .filter(
+            apto=True
         )
     )
 
@@ -149,9 +153,10 @@ def responder_pregunta(request, pk):
                 description=contenido
             )
 
-            send_notifications.delay(answer.id)
+            # send text to verify (celery, you know)
+            # send_notifications.delay(answer.id)
             analyze_text.delay('answer', answer.id)
-            print("?")
+            # print("?")
 
             return redirect('responder_pregunta', pk=question.pk)
 
@@ -247,6 +252,9 @@ def home_view(request):
         .annotate(
             positive_votes_count=Count('votes', filter=Q(votes__is_positive_vote=True)),
             negative_votes_count=Count('votes', filter=Q(votes__is_positive_vote=False))
+        )
+        .filter(
+            apto=True
         )
     )
 
@@ -439,12 +447,16 @@ def crear_pregunta(request):
         if not title or not description:
             messages.error(request, "Título y descripción son obligatorios.")
         else:
-            pregunta = Question.objects.create(
+            question = Question.objects.create(
                 title=title,
                 description=description,
                 user=request.user
             )
-            pregunta.topics.set(topics_ids)
+
+            send_notifications.delay(question.id)
+            analyze_text.delay('question', question.id)
+
+            question.topics.set(topics_ids)
             return redirect('questions_list')
 
     all_topics = Topic.objects.all()
