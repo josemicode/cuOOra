@@ -64,6 +64,7 @@
                 <a href="/topics/"   class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Topics</a>
                 <a href="/questions/"class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">Preguntas</a>
                 <a href="{% url 'crear_pregunta' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">Crear pregunta</a>
+                <a href="{% url 'notifications_view' %}" class="text-sm font-medium text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-100">🔔</a>
                 {% if user.is_authenticated %}
                 
                 <!-- Menú de usuario -->
